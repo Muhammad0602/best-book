@@ -1,9 +1,46 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: rgb(18, 101, 18);
 }
 
+.list-surahs {
+  display: grid;
+  grid-template-columns: 170px 170px;
+  justify-content: center;
+  gap: 0.2rem 1rem;
+}
+
+.surah-container {
+  display: flex;
+  flex-direction: column;
+
+  /* justify-content: end; */
+  align-items: center;
+  background: rgb(238, 232, 232);
+  border: 1px solid white;
+}
+
+.surah-number {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  color: white;
+  background: black;
+  border-radius: 50%;
+}
