@@ -1,37 +1,27 @@
 body {
   margin: 0;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    'Roboto',
-    'Oxygen',
-    'Ubuntu',
-    'Cantarell',
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  box-sizing: border-box;
   background-color: rgb(18, 101, 18);
+  color: white;
 }
 
 .list-surahs {
   display: grid;
-  grid-template-columns: 170px 170px;
+  grid-template-columns: 180px 180px;
   justify-content: center;
-  gap: 0.2rem 1rem;
 }
 
 .surah-container {
   display: flex;
   flex-direction: column;
-
-  /* justify-content: end; */
   align-items: center;
   background: rgb(238, 232, 232);
-  border: 1px solid white;
+}
+
+.surah-container:nth-child(4n-3),
+.surah-container:nth-child(4n) {
+  background-color: rgb(207, 186, 153);
 }
 
 .surah-number {
@@ -43,4 +33,24 @@ body {
   color: white;
   background: black;
   border-radius: 50%;
+}
+.ayahs {
+  width: 450px;
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 1.5rem;
+  margin: 0 auto;
+}
+
+.ayah {
+  text-align: center;
+  border: 2px solid red;
+}
+
+.ayah:nth-child(odd) {
+  background-color: white;
+  color: black;
+}
+.ayah:nth-child(even) {
+  background-color: black;
+  color: white;
 }
