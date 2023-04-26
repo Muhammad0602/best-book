@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import { BiArrowBack } from 'react-icons/bi';
 
 function Details() {
   const navigate = useNavigate();
@@ -9,9 +10,20 @@ function Details() {
   const { chapters } = useSelector((store) => store.chapters);
   const surah = chapters[id - 1];
   return (
-    <div>
-      <button onClick={() => navigate('/')} type="button">back</button>
-      <h2>Here you can read ayahs of a specific surah</h2>
+    <div className="details">
+      <button onClick={() => navigate('/')} type="button">
+        <BiArrowBack aria-hidden="true" />
+        <span className="visually-hidden">Go back to the home page</span>
+      </button>
+      <h2>
+        {surah.name}
+        {' '}
+        <span>
+          (
+          {surah.englishNameTranslation}
+          )
+        </span>
+      </h2>
       <article className="ayahs">
         {surah.ayahs.map((ayah) => (
           <p className="ayah" key={ayah.number}>{ayah.text}</p>
