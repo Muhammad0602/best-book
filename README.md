@@ -2,7 +2,7 @@
 
 <div align="center">
 
-  <h3><b> Bookstore README</b></h3>
+  <h3><b> Best Book README</b></h3>
 
 </div>
 
@@ -26,7 +26,7 @@
 
 # 📖 React Group Project <a name="about-project"></a>
 
-Hello! Here you will see our React Group Project.
+This project is a Quran application that allows users to view a list of surahs and navigate to a specific surah to view its ayahs. It's a single-page application built using React and React Router, allowing for seamless navigation between pages without having to refresh the browser.
 
 ## 🛠 Built With HTML, CSS and JS <a name="built-with"></a>
 
@@ -51,6 +51,7 @@ Hello! Here you will see our React Group Project.
 To get a local copy up and running, follow these steps.
 
 ### Prerequisites
+
 ```
 Git
 VS Code
@@ -58,21 +59,28 @@ Node
 ```
 
 ### Setup
+
 ```
 cd my-folder
-git clone git@github.com/everinurmind/react-group-project.git
-cd react-group-project
+git clone git@github.com/Muhammad0602/best-book.git
+cd best-book
 ```
+
 ### Install
+
 ```
 npm install
 ```
+
 ### Usage
+
 ```
 npm run build
 npm start
 ```
+
 ### Run tests
+
 ```
 npm test
 ```
@@ -80,11 +88,6 @@ npm test
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 👥 Authors <a name="authors"></a>
-
-👤 **Nurbol Sultanov**
-
-- GitHub: [@everinurmind](https://github.com/everinurmind)
-- LinkedIn: [LinkedIn](https://www.linkedin.com/in/everinurmind)
 
 👤 **Muhammad Davlatov**
 
@@ -97,21 +100,19 @@ npm test
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 ## 🤝 Contributing <a name="contributing"></a>
 
 Contributions, issues, and feature requests are welcome!
 
-Feel free to check the [issues page](https://github.com/everinurmind/react-group-project/issues).
+Feel free to check the [issues page](https://github.com/Muhammad0602/best-book/issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## ⭐️ Show your support <a name="support"></a>
 
-Please leave me review if you have any questions or remarks.
+Leave this project a ⭐️ if you like it.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 ## 🙏 Acknowledgments <a name="acknowledgements"></a>
 

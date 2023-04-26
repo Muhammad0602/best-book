@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Renders without crashing Home should render correctly 1`] = `
+<div
+  className="list-surahs"
+/>
+`;
+
+exports[`Renders without crashing should render correctly 1`] = `null`;
