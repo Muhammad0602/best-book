@@ -46,6 +46,16 @@ This project is a Quran application that allows users to view a list of surahs a
   </ul>
 </details>
 
+## 🚀 Live Demo <a name="live-demo"></a>
+
+<a href="https://the-best-book-on-earth.onrender.com/">Live</a>
+
+## 🚀Video Walkthrough <a name="live-demo"></a>
+
+<a href="https://www.loom.com/share/4a148e88c7064482b60676e30b3dd4c2">Watch Here</a>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## 💻 Getting Started <a name="getting-started"></a>
 
 To get a local copy up and running, follow these steps.
@@ -116,7 +126,8 @@ Leave this project a ⭐️ if you like it.
 
 ## 🙏 Acknowledgments <a name="acknowledgements"></a>
 
-Thanks to Microverse team, for all help and support on this project.
+- Thanks to Microverse team, for all help and support on this project.
+- The original design is made by a creative designer ` Nelson Sakwa on Behance.` You can visit her profile here [Link](https://www.behance.net/sakwadesignstudio)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
