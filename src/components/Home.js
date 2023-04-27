@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { getChapters } from '../redux/chapters/chaptersSlice';
+import { clearSlice, getChapters } from '../redux/chapters/chaptersSlice';
 
 function Home() {
   const { chapters, isLoading, error } = useSelector((store) => store.chapters);
@@ -9,6 +9,7 @@ function Home() {
 
   useEffect(() => {
     dispatch(getChapters());
+    dispatch(clearSlice());
   }, [dispatch]);
 
   if (isLoading) {
