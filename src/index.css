@@ -12,6 +12,7 @@ body {
   justify-content: center;
   align-items: center;
   margin: 2rem auto;
+  margin-bottom: 0;
   gap: 0.5rem;
 }
 
@@ -28,6 +29,49 @@ body {
 
 .header h1 span {
   font-size: 1rem;
+}
+
+.search-container {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  border-radius: 0.2rem;
+  padding: 0.4rem 0.7rem;
+  width: 13rem;
+  border: none;
+  background-color: black;
+  color: white;
+}
+
+.search-input:placeholder-shown {
+  font-style: italic;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  color: white;
+}
+
+.search-input::placeholder {
+  color: white;
+  opacity: 0.6;
+}
+
+.search-btn {
+  width: 5rem;
+  border-radius: 0.3rem;
+  background-color: rgb(25, 195, 25);
+  color: black;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  font-weight: 600;
+  transition: all 0.5s ease-in-out;
+  border: none;
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+.search-btn:hover {
+  background-color: black;
+  color: rgb(25, 195, 25);
 }
 
 .list-surahs {
