@@ -8,7 +8,8 @@ function Details() {
   const { number } = useParams();
   const id = parseInt(number, 10);
   const { chapters } = useSelector((store) => store.chapters);
-  const surah = chapters[id - 1];
+  const surah = chapters.length > 1 ? chapters[id - 1] : chapters;
+
   return (
     <div className="details">
       <button onClick={() => navigate('/')} type="button">

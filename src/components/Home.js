@@ -28,7 +28,7 @@ function Home() {
 
   return (
     <div className="list-surahs">
-      {chapters.map((surah) => (
+      {chapters.length > 1 ? chapters.map((surah) => (
         <Link
           to={`/Details/${surah.number}`}
           key={surah.number}
@@ -38,8 +38,18 @@ function Home() {
           <p>{surah.englishName}</p>
           <h4 className="surah-number">{surah.number}</h4>
         </Link>
-      ))}
-
+      ))
+        : (
+          <Link
+            to={`/Details/${chapters.number}`}
+            key={chapters.number}
+            className="surah-container"
+          >
+            <h2>{chapters.name}</h2>
+            <p>{chapters.englishName}</p>
+            <h4 className="surah-number">{chapters.number}</h4>
+          </Link>
+        )}
     </div>
   );
 }
