@@ -14,7 +14,7 @@ function Home() {
   if (isLoading) {
     return (
       <div className="loading">
-        <div className="spinner"></div>
+        <div className="spinner" />
       </div>
     );
   }

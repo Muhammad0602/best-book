@@ -9,6 +9,7 @@ function Header() {
 
   const handleSearch = () => {
     dispatch(getSurah(surah));
+    setSurah('');
   };
 
   return (
