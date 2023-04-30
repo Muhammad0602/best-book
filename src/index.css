@@ -2,7 +2,7 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: rgb(18, 101, 18);
+  background-image: linear-gradient(to right, rgb(24, 182, 103), rgb(29, 171, 128));
   color: white;
 }
 
@@ -48,7 +48,6 @@ body {
 .search-input:placeholder-shown {
   font-style: italic;
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-  color: white;
 }
 
 .search-input::placeholder {
@@ -84,12 +83,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgb(238, 232, 232);
+  background-image: linear-gradient(to top, rgb(28, 216, 122), rgb(28, 216, 160));
+  font-family: 'Noto Naskh Arabic', serif;
 }
 
 .surah-container:nth-child(4n-3),
 .surah-container:nth-child(4n) {
-  background-color: rgb(207, 186, 153);
+  background-image: linear-gradient(to top, rgb(24, 182, 103), rgb(29, 171, 128));
 }
 
 .surah-number {
@@ -98,9 +98,12 @@ body {
   align-items: center;
   width: 50px;
   height: 50px;
-  color: white;
-  background: black;
+  color: black;
+  font-size: 1.3rem;
+  background-image: linear-gradient(to top, aqua, rgb(42, 222, 42));
   border-radius: 50%;
+  box-shadow: 0px 0px 7px 2px rgb(10, 98, 5);
+  text-shadow: 1px 0 15px rgb(0, 0, 0);
 }
 
 .ayahs {
@@ -153,9 +156,19 @@ body {
 }
 
 .loading {
-  text-align: center;
-  font-size: 3rem;
-  line-height: 80vh;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+}
+
+.spinner {
+  margin-top: 5rem;
+  width: 8rem;
+  height: 8rem;
+  border: 0.8rem solid aqua;
+  border-radius: 50%;
+  border-right-color: rgb(27, 194, 12);
+  animation: load 1s ease-in-out infinite;
 }
 
 .error-container {
@@ -176,4 +189,18 @@ body {
 
 .visually-hidden {
   display: none;
+}
+
+@keyframes load {
+  0% {
+    border-right-color: rgb(27, 194, 12);
+  }
+  50% {
+    border-right-color: rgb(197, 90, 23)
+  }
+  100% {
+    transform: rotate(360deg);
+    border-right-color: rgb(221, 214, 18);
+  }
+  
 }
