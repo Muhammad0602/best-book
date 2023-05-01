@@ -28,13 +28,7 @@ export const getSurah = createAsyncThunk('surah/getSurah', async (number) => {
 export const chaptersSlice = createSlice({
   name: 'chapters',
   initialState,
-  reducers: {
-    clearSlice: (state) => {
-      state.chapters = [];
-      state.isLoading = false;
-      state.error = '';
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(getChapters.pending, (state) => ({ ...state, isLoading: true }))

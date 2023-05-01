@@ -56,21 +56,16 @@ body {
 }
 
 .search-btn {
-  width: 5rem;
-  border-radius: 0.3rem;
-  background-color: rgb(25, 195, 25);
-  color: black;
+  background-color: inherit;
+  color: white;
   cursor: pointer;
-  padding: 0.2rem 0.3rem;
-  font-weight: 600;
-  transition: all 0.5s ease-in-out;
+  font-size: 1.3rem;
+  transition: all 0.4s ease-in-out;
   border: none;
-  font-family: 'Trebuchet MS', sans-serif;
 }
 
 .search-btn:hover {
-  background-color: black;
-  color: rgb(25, 195, 25);
+  transform: scale(1.2);
 }
 
 .list-surahs {
@@ -213,7 +208,7 @@ body {
 
 @media screen and (min-width: 768px) {
   body {
-    font-size: 30px;
+    font-size: 25px;
   }
 
   .ayah {
@@ -223,7 +218,7 @@ body {
 
 @media screen and (min-width: 1024px) {
   body {
-    font-size: 40px;
+    font-size: 30px;
   }
 
   .ayah {
