@@ -1,13 +1,23 @@
+@font-face {
+  font-family: 'MyFont';
+  src: url('./fonts/noorehira.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'MyFont2';
+  src: url('./fonts/_PDMS_Saleem_QuranFont.ttf') format('truetype');
+}
+
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: rgb(18, 101, 18);
+  background-image: linear-gradient(to right, rgb(24, 182, 103), rgb(29, 171, 128));
   color: white;
 }
 
 .header {
-  max-width: 450px;
+  /* max-width: 450px; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,8 +27,8 @@ body {
 }
 
 .header img {
-  width: 150px;
-  height: 150px;
+  width: 9.5em;
+  height: 9.5em;
 }
 
 .header h1 {
@@ -48,7 +58,6 @@ body {
 .search-input:placeholder-shown {
   font-style: italic;
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-  color: white;
 }
 
 .search-input::placeholder {
@@ -57,63 +66,66 @@ body {
 }
 
 .search-btn {
-  width: 5rem;
-  border-radius: 0.3rem;
-  background-color: rgb(25, 195, 25);
-  color: black;
+  background-color: inherit;
+  color: white;
   cursor: pointer;
-  padding: 0.2rem 0.3rem;
-  font-weight: 600;
-  transition: all 0.5s ease-in-out;
+  font-size: 1.3rem;
+  transition: all 0.4s ease-in-out;
   border: none;
-  font-family: 'Trebuchet MS', sans-serif;
 }
 
 .search-btn:hover {
-  background-color: black;
-  color: rgb(25, 195, 25);
+  transform: scale(1.2);
 }
 
 .list-surahs {
   display: grid;
-  grid-template-columns: 180px 180px;
+  grid-template-columns: 1fr 1fr;
   justify-content: center;
+  padding: 0.5rem;
 }
 
 .surah-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgb(238, 232, 232);
+  background-image: linear-gradient(to top, rgb(28, 216, 122), rgb(28, 216, 160));
+  font-family: 'MyFont2', serif;
 }
 
 .surah-container:nth-child(4n-3),
 .surah-container:nth-child(4n) {
-  background-color: rgb(207, 186, 153);
+  background-image: linear-gradient(to top, rgb(24, 182, 103), rgb(29, 171, 128));
 }
 
 .surah-number {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50px;
-  height: 50px;
-  color: white;
-  background: black;
+  width: 3em;
+  height: 3em;
+  color: black;
+  font-size: 1.3rem;
+  background-image: linear-gradient(to top, aqua, rgb(42, 222, 42));
   border-radius: 50%;
+  box-shadow: 0 0 7px 2px rgb(10, 98, 5);
+  text-shadow: 1px 0 15px rgb(0, 0, 0);
 }
 
 .ayahs {
-  width: 450px;
-  font-family: 'Noto Naskh Arabic', serif;
+  /* width: 450px; */
+  font-family: 'MyFont', sans-serif;
   font-size: 1.5rem;
   margin: 4rem auto;
+  padding: 0.5rem;
 }
 
 .ayah {
-  text-align: center;
+  text-align: right;
   padding: 0.5rem;
+  padding-right: 1rem;
   margin: 0;
+  font-size: 1.5em;
 }
 
 .ayah:nth-child(odd) {
@@ -135,16 +147,17 @@ body {
   cursor: pointer;
   border: none;
   background: none;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   color: white;
-  position: relative;
-  right: 24%;
+  position: absolute;
+  top: 1%;
+  left: 0;
 }
 
 .details h2 {
   display: flex;
   flex-direction: column;
-  font-family: 'Noto Naskh Arabic', serif;
+  font-family: 'MyFont', serif;
 }
 
 .details h2 span {
@@ -153,9 +166,19 @@ body {
 }
 
 .loading {
-  text-align: center;
-  font-size: 3rem;
-  line-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  margin-top: 5rem;
+  width: 8rem;
+  height: 8rem;
+  border: 0.8rem solid aqua;
+  border-radius: 50%;
+  border-right-color: rgb(27, 194, 12);
+  animation: load 1s ease-in-out infinite;
 }
 
 .error-container {
@@ -176,4 +199,39 @@ body {
 
 .visually-hidden {
   display: none;
+}
+
+@keyframes load {
+  0% {
+    border-right-color: rgb(27, 194, 12);
+  }
+
+  50% {
+    border-right-color: rgb(197, 90, 23);
+  }
+
+  100% {
+    transform: rotate(360deg);
+    border-right-color: rgb(221, 214, 18);
+  }
+}
+
+@media screen and (min-width: 768px) {
+  body {
+    font-size: 25px;
+  }
+
+  .ayah {
+    font-size: 2em;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  body {
+    font-size: 30px;
+  }
+
+  .ayah {
+    font-size: 2.5em;
+  }
 }

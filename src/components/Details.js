@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BiArrowBack } from 'react-icons/bi';
@@ -9,6 +9,10 @@ function Details() {
   const id = parseInt(number, 10);
   const { chapters } = useSelector((store) => store.chapters);
   const surah = chapters.length > 1 ? chapters[id - 1] : chapters;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="details">
