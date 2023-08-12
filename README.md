@@ -28,7 +28,7 @@
 
 # 📖 React Group Project <a name="about-project"></a>
 
-This project is a Quran application that allows users to view a list of surahs and navigate to a specific surah to view its ayahs. It's a single-page application built using React and React Router, allowing for seamless navigation between pages without having to refresh the browser.
+This project is a Quran application that allows users to view a list of surahs and navigate to a specific surah to view its ayahs(verses). It's a single-page application built using React and React Router, allowing for seamless navigation between pages without having to refresh the browser.
 
 ## 🛠 Built With HTML, CSS and JS <a name="built-with"></a>
 
