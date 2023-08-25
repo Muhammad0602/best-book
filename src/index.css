@@ -17,7 +17,6 @@ body {
 }
 
 .header {
-  /* max-width: 450px; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -91,6 +90,8 @@ body {
   align-items: center;
   background-image: linear-gradient(to top, rgb(28, 216, 122), rgb(28, 216, 160));
   font-family: 'MyFont2', serif;
+  text-decoration: none;
+  color: black;
 }
 
 .surah-container:nth-child(4n-3),
@@ -113,7 +114,6 @@ body {
 }
 
 .ayahs {
-  /* width: 450px; */
   font-family: 'MyFont', sans-serif;
   font-size: 1.5rem;
   margin: 4rem auto;
