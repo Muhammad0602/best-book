@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getChapters } from '../redux/chapters/chaptersSlice';
 
 function Home() {
-  const { chapters, isLoading, error } = useSelector((store) => store.chapters);
+  const { chapters, search, isLoading, error } = useSelector((store) => store.chapters);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function Home() {
 
   return (
     <div className="list-surahs">
-      {chapters.length > 1 ? chapters.map((surah) => (
+      {chapters.length > 1 ? chapters.filter(surah => search ? surah.englishName.toLowerCase().includes(search) || surah.number == search || surah.name.toLowerCase().includes(search) : surah).map((surah) => (
         <Link
           to={`/Details/${surah.number}`}
           key={surah.number}
