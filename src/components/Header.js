@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { CgSearch } from 'react-icons/cg';
 import logo from '../images/quran.png';
-import { getSurah } from '../redux/chapters/chaptersSlice';
+import { setSearch } from '../redux/chapters/chaptersSlice';
 
 function Header() {
   const dispatch = useDispatch();
-  const [surah, setSurah] = useState('');
-
-  const handleSearch = () => {
-    dispatch(getSurah(surah));
-    setSurah('');
-  };
+  const { search } = useSelector((store) => store.chapters);
 
   return (
     <>
@@ -23,11 +18,8 @@ function Header() {
         </h1>
       </div>
       <div className="header search-container">
-        <input className="search-input" type="text" placeholder="Search surah by its number" value={surah} onChange={(e) => setSurah(e.target.value)} />
-        <button className="search-btn" type="submit" onClick={handleSearch}>
-          <CgSearch aria-hidden="true" />
-          <span className="visually-hidden">Search Surah</span>
-        </button>
+        <input className="search-input" type="text" placeholder="Search a surah" value={search} onChange={(e) => dispatch(setSearch(e.target.value))} />
+        <CgSearch aria-hidden="true" className="search-icon" />
       </div>
     </>
   );

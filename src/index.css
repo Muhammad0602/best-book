@@ -17,7 +17,6 @@ body {
 }
 
 .header {
-  /* max-width: 450px; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -43,13 +42,14 @@ body {
 
 .search-container {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 3rem;
+  margin-left: -10rem;
 }
 
 .search-input {
-  border-radius: 0.2rem;
-  padding: 0.4rem 0.7rem;
-  width: 13rem;
+  border-radius: 0.3rem;
+  padding: 0.5rem 2rem;
+  width: 10rem;
   border: none;
   background-color: black;
   color: white;
@@ -65,17 +65,11 @@ body {
   opacity: 0.6;
 }
 
-.search-btn {
-  background-color: inherit;
-  color: white;
-  cursor: pointer;
-  font-size: 1.3rem;
-  transition: all 0.4s ease-in-out;
-  border: none;
-}
-
-.search-btn:hover {
-  transform: scale(1.2);
+.search-icon {
+  margin-left: -230px;
+  width: 20px;
+  height: 15px;
+  opacity: 0.7;
 }
 
 .list-surahs {
@@ -91,6 +85,8 @@ body {
   align-items: center;
   background-image: linear-gradient(to top, rgb(28, 216, 122), rgb(28, 216, 160));
   font-family: 'MyFont2', serif;
+  text-decoration: none;
+  color: black;
 }
 
 .surah-container:nth-child(4n-3),
@@ -113,7 +109,6 @@ body {
 }
 
 .ayahs {
-  /* width: 450px; */
   font-family: 'MyFont', sans-serif;
   font-size: 1.5rem;
   margin: 4rem auto;
@@ -126,6 +121,7 @@ body {
   padding-right: 1rem;
   margin: 0;
   font-size: 1.5em;
+  letter-spacing: 1.5px;
 }
 
 .ayah:nth-child(odd) {
