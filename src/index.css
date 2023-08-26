@@ -42,13 +42,14 @@ body {
 
 .search-container {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 3rem;
+  margin-left: -10rem;
 }
 
 .search-input {
-  border-radius: 0.2rem;
-  padding: 0.4rem 0.7rem;
-  width: 13rem;
+  border-radius: 0.3rem;
+  padding: 0.5rem 2rem;
+  width: 10rem;
   border: none;
   background-color: black;
   color: white;
@@ -64,7 +65,13 @@ body {
   opacity: 0.6;
 }
 
-.search-btn {
+.search-icon {
+  margin-left: -230px;
+  width: 20px;
+  height: 15px;
+  opacity: 0.7;
+}
+/* .search-btn {
   background-color: inherit;
   color: white;
   cursor: pointer;
@@ -75,7 +82,7 @@ body {
 
 .search-btn:hover {
   transform: scale(1.2);
-}
+} */
 
 .list-surahs {
   display: grid;
@@ -126,6 +133,7 @@ body {
   padding-right: 1rem;
   margin: 0;
   font-size: 1.5em;
+  letter-spacing: 1.5px;
 }
 
 .ayah:nth-child(odd) {
