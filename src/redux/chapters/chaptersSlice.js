@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 export const initialState = {
-  search: "",
+  search: '',
   chapters: [],
   isLoading: false,
   error: '',
@@ -30,7 +30,7 @@ export const chaptersSlice = createSlice({
   name: 'chapters',
   initialState,
   reducers: {
-    setSearch: (state, action) => { state.search = action.payload }
+    setSearch: (state, action) => { state.search = action.payload; },
   },
   extraReducers: (builder) => {
     builder
@@ -44,7 +44,7 @@ export const chaptersSlice = createSlice({
         ...state,
         isLoading: false,
         error: action.payload,
-      }))
+      }));
   },
 });
 

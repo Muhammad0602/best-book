@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CgSearch } from 'react-icons/cg';
 import logo from '../images/quran.png';
@@ -6,7 +6,7 @@ import { setSearch } from '../redux/chapters/chaptersSlice';
 
 function Header() {
   const dispatch = useDispatch();
-  const { search } = useSelector(store => store.chapters)
+  const { search } = useSelector((store) => store.chapters);
 
   return (
     <>
