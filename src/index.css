@@ -134,6 +134,13 @@ body {
   color: white;
 }
 
+.english-ayah {
+  text-align: left;
+  font-size: 0.7em;
+  letter-spacing: 1.2px;
+  word-spacing: 2px;
+}
+
 .details {
   text-align: center;
   margin: 0 auto;
@@ -229,5 +236,9 @@ body {
 
   .ayah {
     font-size: 2.5em;
+  }
+
+  .english-ayah {
+    font-size: 1.2em;
   }
 }
