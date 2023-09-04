@@ -7,15 +7,14 @@ export const initialState = {
   error: '',
 };
 
-
 export const getEnglish = createAsyncThunk('english/getEnglish', async () => {
-  try{
+  try {
     const response = await axios.get('http://api.alquran.cloud/v1/quran/en.asad');
     return response.data.data.surahs;
   } catch (error) {
-    throw error.response.data.error
+    throw error.response.data.error;
   }
-})
+});
 
 export const englishSlice = createSlice({
   name: 'english',

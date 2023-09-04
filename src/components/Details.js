@@ -12,11 +12,11 @@ function Details() {
   const { chapters } = useSelector((store) => store.chapters);
   const { english } = useSelector((store) => store.english);
   const surah = chapters.length > 1 ? chapters[id - 1] : chapters;
-  const surahEng = english && english[id-1];
+  const surahEng = english && english[id - 1];
 
   useEffect(() => {
     dispatch(getEnglish());
-  }, [dispatch])
+  }, [dispatch]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,10 +40,10 @@ function Details() {
       <article className="ayahs">
         {surah.ayahs?.map((ayah, index) => (
           <div key={ayah.number}>
-             <p className="ayah">{ayah.text}</p>
-             <p className="ayah english-ayah">{surahEng?.ayahs[index]?.text}</p>
+            <p className="ayah">{ayah.text}</p>
+            <p className="ayah english-ayah">{surahEng?.ayahs[index]?.text}</p>
           </div>
-         
+
         ))}
       </article>
     </div>
