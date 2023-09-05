@@ -34,7 +34,8 @@ function Home() {
     <div className="list-surahs">
       {chapters.length > 1
         ? chapters.filter((sura) => (search
-          ? sura.englishName.toLowerCase().includes(search) || sura.name.includes(search) : sura))
+          ? sura.englishName.toLowerCase().includes(search) || sura.name.includes(search)
+           || parseInt(sura.number, 10) === parseInt(search) : sura))
           .map((surah) => (
             <Link
               to={`/Details/${surah.number}`}
