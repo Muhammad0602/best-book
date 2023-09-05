@@ -35,7 +35,7 @@ function Home() {
       {chapters.length > 1
         ? chapters.filter((sura) => (search
           ? sura.englishName.toLowerCase().includes(search) || sura.name.includes(search)
-           || parseInt(sura.number, 10) === parseInt(search) : sura))
+           || parseInt(sura.number, 10) === parseInt(search, 10) : sura))
           .map((surah) => (
             <Link
               to={`/Details/${surah.number}`}

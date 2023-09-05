@@ -16,8 +16,8 @@ function Details() {
   const surahEng = english && english[id - 1];
 
   useEffect(() => {
-    dispatch(setSearch(""));
-  }, [search])
+    dispatch(setSearch(''));
+  }, [dispatch, search]);
 
   useEffect(() => {
     dispatch(getEnglish());
@@ -45,7 +45,11 @@ function Details() {
       <article className="ayahs">
         {surah.ayahs?.map((ayah, index) => (
           <div key={ayah.number}>
-            <p className="ayah">{ayah.text} <span className="ayah-ending">{ayah.numberInSurah}</span></p>
+            <p className="ayah">
+              {ayah.text}
+              {' '}
+              <span className="ayah-ending">{ayah.numberInSurah}</span>
+            </p>
             <p className="ayah english-ayah">{surahEng?.ayahs[index]?.text}</p>
           </div>
 
