@@ -9,7 +9,7 @@ export const initialState = {
 
 export const getEnglish = createAsyncThunk('english/getEnglish', async () => {
   try {
-    const response = await axios.get('http://api.alquran.cloud/v1/quran/en.asad');
+    const response = await axios.get('https://api.alquran.cloud/v1/quran/en.asad');
     return response.data.data.surahs;
   } catch (error) {
     throw error.response.data.error;
