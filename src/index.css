@@ -141,6 +141,14 @@ body {
   word-spacing: 2px;
 }
 
+.ayah-ending {
+  border: 1px solid #0f0e0e;
+  border-radius: 50%;
+  padding: 0rem 1rem;
+  font-size: large;
+  margin-right: 1rem;
+}
+
 .details {
   text-align: center;
   margin: 0 auto;
