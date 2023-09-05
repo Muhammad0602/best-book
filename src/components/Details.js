@@ -3,16 +3,21 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BiArrowBack } from 'react-icons/bi';
 import { getEnglish } from '../redux/english/englishSlice';
+import { setSearch } from '../redux/chapters/chaptersSlice';
 
 function Details() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { number } = useParams();
   const id = parseInt(number, 10);
-  const { chapters } = useSelector((store) => store.chapters);
+  const { chapters, search } = useSelector((store) => store.chapters);
   const { english } = useSelector((store) => store.english);
   const surah = chapters.length > 1 ? chapters[id - 1] : chapters;
   const surahEng = english && english[id - 1];
+
+  useEffect(() => {
+    dispatch(setSearch(""));
+  }, [search])
 
   useEffect(() => {
     dispatch(getEnglish());
@@ -40,7 +45,7 @@ function Details() {
       <article className="ayahs">
         {surah.ayahs?.map((ayah, index) => (
           <div key={ayah.number}>
-            <p className="ayah">{ayah.text}</p>
+            <p className="ayah">{ayah.text} <span className="ayah-ending">{ayah.numberInSurah}</span></p>
             <p className="ayah english-ayah">{surahEng?.ayahs[index]?.text}</p>
           </div>
 
