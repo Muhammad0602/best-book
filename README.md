@@ -109,6 +109,8 @@ npm test
 ## 🔭 Future Features <a name="future-features"></a>
 
 - **[Creating own design]**
+- **[Improving the translation]**
+- **[Adding an audio]**
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
