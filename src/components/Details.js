@@ -15,6 +15,17 @@ import Toolbar, { HIGHLIGHT_COLORS, PEN_COLORS, PEN_WIDTHS } from './Toolbar';
 import { HighlightSheet, MarksSheet } from './Sheets';
 
 const NONE = [];
+const TRANSLATION_KEY = 'bestbook.showTranslation';
+
+// The translation is hidden until the reader switches it on; the choice is
+// remembered on this device.
+const readShowTranslation = () => {
+  try {
+    return window.localStorage.getItem(TRANSLATION_KEY) === '1';
+  } catch (error) {
+    return false;
+  }
+};
 
 // The word under a screen position, if any.
 const wordAt = (x, y) => {
@@ -51,6 +62,17 @@ function Details() {
   const [selectedId, setSelectedId] = useState(null);
   const [drag, setDrag] = useState(null);
   const [sheet, setSheet] = useState(null); // { ayah, text, word } | 'list'
+  const [showTranslation, setShowTranslation] = useState(readShowTranslation);
+
+  const toggleTranslation = () => {
+    const next = !showTranslation;
+    setShowTranslation(next);
+    try {
+      window.localStorage.setItem(TRANSLATION_KEY, next ? '1' : '0');
+    } catch (error) {
+      // The choice still applies until the app is closed.
+    }
+  };
 
   useEffect(() => {
     dispatch(getChapters());
@@ -259,6 +281,7 @@ function Details() {
               ayah={ayah}
               highlights={highlightsByAyah[ayah.numberInSurah] || NONE}
               drag={drag && drag.ayah === ayah.numberInSurah ? drag : null}
+              showTranslation={showTranslation}
             />
           ))}
           <DrawingLayer
@@ -310,6 +333,8 @@ function Details() {
           onDelete={() => { if (selected) remove(selected); setSelectedId(null); }}
           count={annotations.length}
           onOpenList={() => setSheet(sheet === 'list' ? null : 'list')}
+          showTranslation={showTranslation}
+          onToggleTranslation={toggleTranslation}
         />
       )}
     </div>

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   BiBookOpen, BiHighlight, BiPencil, BiEraser, BiPointer, BiUndo, BiRedo, BiTrash, BiListUl,
 } from 'react-icons/bi';
+import { MdTranslate } from 'react-icons/md';
 import { undone, redone } from '../redux/annotations/annotationsSlice';
 
 export const HIGHLIGHT_COLORS = ['yellow', 'green', 'pink', 'blue'];
@@ -34,6 +35,7 @@ const TOOLS = [
 function Toolbar({
   mode, onMode, highlightColor, onHighlightColor, tool, onTool, penColor, onPenColor,
   penWidth, onPenWidth, canDelete, onDelete, count, onOpenList,
+  showTranslation, onToggleTranslation,
 }) {
   const dispatch = useDispatch();
   const { undo, redo, sync } = useSelector((store) => store.annotations);
@@ -143,6 +145,16 @@ function Toolbar({
             <span>{label}</span>
           </button>
         ))}
+        <button
+          type="button"
+          className={`mode toggle${showTranslation ? ' on' : ''}`}
+          aria-pressed={showTranslation}
+          title={showTranslation ? 'Hide the English translation' : 'Show the English translation'}
+          onClick={onToggleTranslation}
+        >
+          <MdTranslate aria-hidden="true" />
+          <span>Translation</span>
+        </button>
         <button type="button" className="mode" onClick={onOpenList}>
           <BiListUl aria-hidden="true" />
           <span>{`Marks${count ? ` (${count})` : ''}`}</span>
@@ -172,6 +184,8 @@ Toolbar.propTypes = {
   onDelete: PropTypes.func.isRequired,
   count: PropTypes.number.isRequired,
   onOpenList: PropTypes.func.isRequired,
+  showTranslation: PropTypes.bool.isRequired,
+  onToggleTranslation: PropTypes.func.isRequired,
 };
 
 export default Toolbar;

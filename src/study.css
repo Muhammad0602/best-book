@@ -209,6 +209,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  min-width: 0;
   min-height: 48px;
   padding: 4px 2px;
   border-radius: 10px;
@@ -223,6 +224,13 @@
 .toolbar .tool.on {
   background-color: rgb(24, 182, 103);
   color: black;
+}
+
+/* An on/off switch, not a mode: shown as lit rather than filled. */
+.toolbar .mode.toggle.on {
+  background-color: transparent;
+  color: rgb(24, 182, 103);
+  box-shadow: inset 0 0 0 1.5px rgb(24, 182, 103);
 }
 
 .tool {
@@ -472,4 +480,15 @@
 
 .form-notice {
   color: rgb(20, 110, 70);
+}
+
+/* Five buttons on a narrow phone: keep every label on one line. */
+@media (max-width: 360px) {
+  .toolbar-row {
+    gap: 3px;
+  }
+
+  .toolbar .mode {
+    font-size: 10.5px;
+  }
 }

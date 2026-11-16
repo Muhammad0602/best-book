@@ -49,7 +49,9 @@ function Words({
   });
 }
 
-function Ayah({ ayah, highlights, drag }) {
+function Ayah({
+  ayah, highlights, drag, showTranslation,
+}) {
   const arabic = useMemo(() => splitWords(ayah.text), [ayah.text]);
   const english = useMemo(() => splitWords(ayah.translation), [ayah.translation]);
   const arabicCovers = useMemo(
@@ -67,9 +69,11 @@ function Ayah({ ayah, highlights, drag }) {
         <Words words={arabic} text="ar" covers={arabicCovers} drag={drag} />
         <span className="ayah-ending">{ayah.numberInSurah}</span>
       </p>
-      <p className="ayah english-ayah" dir="ltr" lang="en">
-        <Words words={english} text="en" covers={englishCovers} drag={drag} />
-      </p>
+      {showTranslation && (
+        <p className="ayah english-ayah" dir="ltr" lang="en">
+          <Words words={english} text="en" covers={englishCovers} drag={drag} />
+        </p>
+      )}
     </div>
   );
 }
@@ -81,6 +85,7 @@ Ayah.propTypes = {
     translation: PropTypes.string,
   }).isRequired,
   highlights: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  showTranslation: PropTypes.bool,
   drag: PropTypes.shape({
     text: PropTypes.string,
     from: PropTypes.number,
@@ -89,6 +94,6 @@ Ayah.propTypes = {
   }),
 };
 
-Ayah.defaultProps = { drag: null };
+Ayah.defaultProps = { drag: null, showTranslation: false };
 
 export default React.memo(Ayah);
