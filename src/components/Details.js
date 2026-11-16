@@ -1,60 +1,317 @@
-import React, { useEffect } from 'react';
+import React, {
+  useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BiArrowBack } from 'react-icons/bi';
-import { getEnglish } from '../redux/english/englishSlice';
-import { setSearch } from '../redux/chapters/chaptersSlice';
+import {
+  getChapters, getSurah, TRANSLATION_EDITION, ARABIC_EDITION,
+} from '../redux/chapters/chaptersSlice';
+import { changeApplied, historyCleared } from '../redux/annotations/annotationsSlice';
+import { newId } from '../lib/geometry';
+import Ayah from './Ayah';
+import DrawingLayer from './DrawingLayer';
+import Toolbar, { HIGHLIGHT_COLORS, PEN_COLORS, PEN_WIDTHS } from './Toolbar';
+import { HighlightSheet, MarksSheet } from './Sheets';
+
+const NONE = [];
+
+// The word under a screen position, if any.
+const wordAt = (x, y) => {
+  const element = document.elementFromPoint(x, y);
+  const word = element && element.closest ? element.closest('.w') : null;
+  const block = word ? word.closest('[data-ayah]') : null;
+  if (!block) return null;
+  return {
+    ayah: Number(block.dataset.ayah),
+    text: word.dataset.t,
+    word: Number(word.dataset.w),
+  };
+};
 
 function Details() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { number } = useParams();
   const id = parseInt(number, 10);
-  const { chapters, search } = useSelector((store) => store.chapters);
-  const { english } = useSelector((store) => store.english);
-  const surah = chapters.length > 1 ? chapters[id - 1] : chapters;
-  const surahEng = english && english[id - 1];
+  const {
+    chapters, surahs, surahLoading, surahError,
+  } = useSelector((store) => store.chapters);
+  const items = useSelector((store) => store.annotations.items);
+  const surah = surahs[id];
+  const info = surah || chapters[id - 1];
+
+  const articleRef = useRef(null);
+  const dragRef = useRef(null);
+  const [mode, setMode] = useState('read');
+  const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_COLORS[0]);
+  const [tool, setTool] = useState('pen');
+  const [penColor, setPenColor] = useState(PEN_COLORS[0]);
+  const [penWidth, setPenWidth] = useState(PEN_WIDTHS[1]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [drag, setDrag] = useState(null);
+  const [sheet, setSheet] = useState(null); // { ayah, text, word } | 'list'
 
   useEffect(() => {
-    dispatch(setSearch(''));
-  }, [dispatch, search]);
-
-  useEffect(() => {
-    dispatch(getEnglish());
-  }, [dispatch]);
-
-  useEffect(() => {
+    dispatch(getChapters());
+    dispatch(getSurah(id));
+    dispatch(historyCleared());
     window.scrollTo(0, 0);
-  }, []);
+  }, [dispatch, id]);
+
+  // This surah's marks, oldest first.
+  const annotations = useMemo(
+    () => Object.values(items)
+      .filter((annotation) => annotation.surah === id)
+      .sort((a, b) => a.ayah - b.ayah || a.createdAt.localeCompare(b.createdAt)),
+    [items, id],
+  );
+  const drawings = useMemo(
+    () => annotations.filter((annotation) => annotation.type === 'drawing'),
+    [annotations],
+  );
+  const highlightsByAyah = useMemo(() => {
+    const map = {};
+    annotations.forEach((annotation) => {
+      if (annotation.type !== 'highlight') return;
+      if (!map[annotation.ayah]) map[annotation.ayah] = [];
+      map[annotation.ayah].push(annotation);
+    });
+    return map;
+  }, [annotations]);
+
+  const covering = useCallback((spot) => (highlightsByAyah[spot.ayah] || NONE).filter(
+    ({ data }) => data.text === spot.text && data.start <= spot.word && data.end >= spot.word,
+  ), [highlightsByAyah]);
+
+  const sheetHighlights = sheet && sheet !== 'list' ? covering(sheet) : NONE;
+  const selected = drawings.find((drawing) => drawing.id === selectedId) || null;
+
+  useEffect(() => {
+    if (sheet && sheet !== 'list' && sheetHighlights.length === 0) setSheet(null);
+  }, [sheet, sheetHighlights.length]);
+
+  const changeMode = (next) => {
+    setMode(next);
+    setSelectedId(null);
+    setSheet(null);
+    setDrag(null);
+    dragRef.current = null;
+  };
+
+  const remove = (annotation) => dispatch(changeApplied({ removed: [annotation] }));
+
+  const recolor = (highlight, color) => {
+    if (highlight.data.color === color) return;
+    dispatch(changeApplied({
+      removed: [highlight],
+      added: [{
+        ...highlight,
+        data: { ...highlight.data, color },
+        updatedAt: new Date().toISOString(),
+      }],
+    }));
+  };
+
+  const addHighlight = ({
+    ayah, text, from, to,
+  }) => {
+    const start = Math.min(from, to);
+    const end = Math.max(from, to);
+    const same = (highlightsByAyah[ayah] || NONE).find(
+      ({ data }) => data.text === text && data.start === start && data.end === end,
+    );
+    if (same) {
+      recolor(same, highlightColor);
+      return;
+    }
+    const now = new Date().toISOString();
+    dispatch(changeApplied({
+      added: [{
+        id: newId(),
+        surah: id,
+        ayah,
+        type: 'highlight',
+        data: {
+          text,
+          edition: text === 'ar' ? ARABIC_EDITION : TRANSLATION_EDITION,
+          start,
+          end,
+          color: highlightColor,
+        },
+        createdAt: now,
+        updatedAt: now,
+      }],
+    }));
+  };
+
+  // Highlight mode: tap a word, or drag from the first word to the last.
+  const onPointerDown = (event) => {
+    if (mode !== 'highlight' || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    const spot = wordAt(event.clientX, event.clientY);
+    if (!spot) return;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch (error) {
+      // Not essential: the drag still works while the pointer stays on the text.
+    }
+    dragRef.current = {
+      ...spot, from: spot.word, to: spot.word, moved: false, pointerId: event.pointerId,
+    };
+    setDrag({ ...dragRef.current, color: highlightColor });
+  };
+
+  const onPointerMove = (event) => {
+    const { current } = dragRef;
+    if (!current || current.pointerId !== event.pointerId) return;
+    const spot = wordAt(event.clientX, event.clientY);
+    if (!spot || spot.ayah !== current.ayah || spot.text !== current.text) return;
+    if (spot.word === current.to) return;
+    current.to = spot.word;
+    current.moved = true;
+    setDrag({ ...current, color: highlightColor });
+  };
+
+  const onPointerUp = (event) => {
+    const { current } = dragRef;
+    if (!current || current.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    setDrag(null);
+    if (!current.moved && covering(current).length > 0) {
+      setSheet({ ayah: current.ayah, text: current.text, word: current.word });
+    } else {
+      addHighlight(current);
+    }
+  };
+
+  const onPointerCancel = () => {
+    dragRef.current = null;
+    setDrag(null);
+  };
+
+  // Read mode: tapping highlighted words opens the "remove" sheet.
+  const onClick = (event) => {
+    if (mode !== 'read') return;
+    const word = event.target.closest ? event.target.closest('.w.hl') : null;
+    const block = word ? word.closest('[data-ayah]') : null;
+    const selection = window.getSelection ? window.getSelection() : null;
+    if (!block || (selection && !selection.isCollapsed)) return;
+    setSheet({
+      ayah: Number(block.dataset.ayah),
+      text: word.dataset.t,
+      word: Number(word.dataset.w),
+    });
+  };
+
+  const goTo = (annotation) => {
+    setSheet(null);
+    const element = document.getElementById(`ayah-${annotation.ayah}`);
+    if (!element) return;
+    element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    element.classList.add('flash');
+    setTimeout(() => element.classList.remove('flash'), 1600);
+  };
 
   return (
     <div className="details">
-      <button onClick={() => navigate('/')} type="button">
+      <button className="back-button" onClick={() => navigate('/')} type="button">
         <BiArrowBack aria-hidden="true" />
         <span className="visually-hidden">Go back to the home page</span>
       </button>
       <h2>
-        {surah.name}
+        {info?.name}
         {' '}
         <span>
-          (
-          {surah.englishNameTranslation}
-          )
+          {info ? `(${info.englishNameTranslation})` : ''}
         </span>
       </h2>
-      <article className="ayahs">
-        {surah.ayahs?.map((ayah, index) => (
-          <div key={ayah.number}>
-            <p className="ayah">
-              {ayah.text}
-              {' '}
-              <span className="ayah-ending">{ayah.numberInSurah}</span>
-            </p>
-            <p className="ayah english-ayah">{surahEng?.ayahs[index]?.text}</p>
-          </div>
 
-        ))}
-      </article>
+      {!surah && surahLoading && (
+        <div className="loading"><div className="spinner" /></div>
+      )}
+      {!surah && !surahLoading && surahError && (
+        <div className="error-container">
+          <h2>This surah could not be loaded.</h2>
+          <p>{surahError}</p>
+          <button type="button" className="plain-button" onClick={() => dispatch(getSurah(id))}>
+            Try again
+          </button>
+        </div>
+      )}
+
+      {surah && (
+        // The handlers below only pick up taps on words; every action is
+        // also reachable through the buttons of the "Marks" list.
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+        <article
+          ref={articleRef}
+          className={`ayahs mode-${mode}`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          onClick={onClick}
+        >
+          {surah.ayahs.map((ayah) => (
+            <Ayah
+              key={ayah.number}
+              ayah={ayah}
+              highlights={highlightsByAyah[ayah.numberInSurah] || NONE}
+              drag={drag && drag.ayah === ayah.numberInSurah ? drag : null}
+            />
+          ))}
+          <DrawingLayer
+            articleRef={articleRef}
+            surah={id}
+            drawings={drawings}
+            active={mode === 'draw'}
+            tool={tool}
+            color={penColor}
+            width={penWidth}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        </article>
+      )}
+
+      {surah && sheet === 'list' && (
+        <MarksSheet
+          annotations={annotations}
+          ayahs={surah.ayahs}
+          onGo={goTo}
+          onRemove={remove}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {surah && sheet && sheet !== 'list' && sheetHighlights.length > 0 && (
+        <HighlightSheet
+          highlights={sheetHighlights}
+          ayah={surah.ayahs[sheet.ayah - 1]}
+          onRemove={remove}
+          onColor={recolor}
+          onClose={() => setSheet(null)}
+        />
+      )}
+
+      {surah && (
+        <Toolbar
+          mode={mode}
+          onMode={changeMode}
+          highlightColor={highlightColor}
+          onHighlightColor={setHighlightColor}
+          tool={tool}
+          onTool={(next) => { setTool(next); setSelectedId(null); }}
+          penColor={penColor}
+          onPenColor={setPenColor}
+          penWidth={penWidth}
+          onPenWidth={setPenWidth}
+          canDelete={Boolean(selected)}
+          onDelete={() => { if (selected) remove(selected); setSelectedId(null); }}
+          count={annotations.length}
+          onOpenList={() => setSheet(sheet === 'list' ? null : 'list')}
+        />
+      )}
     </div>
   );
 }

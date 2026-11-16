@@ -111,8 +111,9 @@ body {
 .ayahs {
   font-family: 'MyFont', sans-serif;
   font-size: 1.5rem;
-  margin: 4rem auto;
+  margin: 2rem auto 4rem;
   padding: 0.5rem;
+  position: relative;
 }
 
 .ayah {
@@ -152,17 +153,19 @@ body {
 .details {
   text-align: center;
   margin: 0 auto;
+  padding-bottom: 9rem;
 }
 
-.details button {
+.back-button {
   cursor: pointer;
   border: none;
   background: none;
   font-size: 1.7rem;
   color: white;
   position: absolute;
-  top: 1%;
-  left: 0;
+  top: 0.4rem;
+  left: 0.2rem;
+  padding: 0.4rem;
 }
 
 .details h2 {
@@ -209,7 +212,12 @@ body {
 }
 
 .visually-hidden {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @keyframes load {

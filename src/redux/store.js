@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import chaptersReducer from './chapters/chaptersSlice';
-import englishReducer from './english/englishSlice';
+import annotationsReducer from './annotations/annotationsSlice';
+import authReducer from './auth/authSlice';
 
 const store = configureStore({
   reducer: {
     chapters: chaptersReducer,
-    english: englishReducer,
+    annotations: annotationsReducer,
+    auth: authReducer,
   },
 });
 

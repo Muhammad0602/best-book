@@ -20,6 +20,7 @@
   - [Run tests](#run-tests)
   - [Deployment](#triangular_flag_on_post-deployment)
 - [👥 Authors](#authors)
+- [✏️ Study features](#study-features)
 - [🔭 Future Features](#future-features)
 - [🤝 Contributing](#contributing)
 - [⭐️ Show your support](#support)
@@ -105,6 +106,37 @@ npm test
 
 - GitHub: [@Muhammad0602](https://github.com/Muhammad0602)
 - LinkedIn: [LinkedIn](https://www.linkedin.com/in/muhammad-davlatov-6a8536254/)
+
+## ✏️ Study features <a name="study-features"></a>
+
+- **Highlights** – choose *Highlight*, then tap a word or drag across words (Arabic or translation). Tap a highlight later to change its colour or remove it; overlapping highlights are removed one at a time.
+- **Drawings** – choose *Draw* to mark the text freehand (X, circle, underline, arrow). Pen, eraser, select-and-delete, undo/redo, colours and thickness. Two fingers scroll while drawing.
+- **Marks list** – every mark in the current surah, with jump-to-ayah and delete.
+- **Auto-save** – every change is saved at once; nothing to press.
+- **Installable (PWA)** – "Add to Home Screen" on a phone or tablet. The app and the surahs you have opened are available offline.
+- **Accounts (optional)** – with Supabase configured, readers sign in and their marks follow them to every device. Without it, marks are kept on the device.
+
+### How marks are stored
+
+Marks are tied to the text, not to pixels:
+
+- a highlight is `surah + ayah + first word + last word`;
+- a drawing is anchored to the nearest word and its points are stored as offsets from that word, measured in word heights, so it stays beside the same word on any screen size.
+
+### Switching on accounts (Supabase)
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor**, paste the contents of [`supabase/schema.sql`](./supabase/schema.sql) and run it. This creates the `annotations` table with Row Level Security, so each reader can only read and change their own rows.
+3. In **Authentication → URL Configuration**, set the Site URL to the address of the deployed app.
+4. Copy the **Project URL** and the **anon / publishable key** (never the `service_role` key) from **Project Settings → API**:
+   - for local development, into a `.env.local` file (see [`.env.example`](./.env.example));
+   - for the deployed site, into two GitHub repository *variables* named `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` (**Settings → Secrets and variables → Actions → Variables**), then re-run the deploy workflow.
+
+### Deployment
+
+Every push to `dev` runs [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml), which tests, builds and publishes the app to GitHub Pages. In the repository **Settings → Pages**, the source must be set to **GitHub Actions**.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 🔭 Future Features <a name="future-features"></a>
 
