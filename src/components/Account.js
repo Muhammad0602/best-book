@@ -102,14 +102,19 @@ function Account() {
             ? `${waiting} still waiting to be sent (${sync === 'offline' ? 'you are offline' : 'sending'}).`
             : 'Everything is saved.'}
         </p>
-        <button
-          type="button"
-          className="plain-button"
-          disabled={busy}
-          onClick={() => attempt(signOut, '')}
-        >
-          Sign out
-        </button>
+        <div className="account-actions">
+          <button type="button" className="plain-button" onClick={() => navigate('/')}>
+            Go to the surahs
+          </button>
+          <button
+            type="button"
+            className="plain-button secondary"
+            disabled={busy}
+            onClick={() => attempt(signOut, '')}
+          >
+            Sign out
+          </button>
+        </div>
       </>
     );
   } else {
@@ -157,7 +162,7 @@ function Account() {
 
   return (
     <div className="details account">
-      <button className="back-button" onClick={() => navigate(-1)} type="button">
+      <button className="back-button" onClick={() => navigate('/')} type="button">
         <BiArrowBack aria-hidden="true" />
         <span className="visually-hidden">Go back</span>
       </button>

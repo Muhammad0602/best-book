@@ -2,6 +2,14 @@
 
 /* ---------- header additions ---------- */
 
+.home-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
 .header-compact {
   margin-top: 0.6rem;
 }

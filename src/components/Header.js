@@ -23,11 +23,13 @@ function Header() {
         {user ? <BiUserCheck aria-hidden="true" /> : <BiUser aria-hidden="true" />}
       </Link>
       <div className={`header${home ? '' : ' header-compact'}`}>
-        <img src={logo} alt="quran karim" />
-        <h1>
-          Quran Karim
-          <span>(114 surahs)</span>
-        </h1>
+        <Link to="/" className="home-link" aria-label="Quran Karim, all surahs">
+          <img src={logo} alt="" />
+          <h1>
+            Quran Karim
+            <span>(114 surahs)</span>
+          </h1>
+        </Link>
       </div>
       {home && (
         <div className="header search-container">
