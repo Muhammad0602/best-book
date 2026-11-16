@@ -109,6 +109,9 @@ npm test
 
 ## ✏️ Study features <a name="study-features"></a>
 
+- **Madinah-style page** – the Arabic text uses the King Fahd Complex *Uthmanic Hafs* font and its matching text (bundled in `src/data/quran`, built with `node scripts/build-quran-text.js`), and the ayahs follow one another like on a page of the mushaf. The whole Arabic text works offline.
+- **Translation switch** – the English translation is off by default; the *Translation* button shows it under each ayah.
+
 - **Highlights** – choose *Highlight*, then tap a word or drag across words (Arabic or translation). Tap a highlight later to change its colour or remove it; overlapping highlights are removed one at a time.
 - **Drawings** – choose *Draw* to mark the text freehand (X, circle, underline, arrow). Pen, eraser, select-and-delete, undo/redo, colours and thickness. Two fingers scroll while drawing.
 - **Marks list** – every mark in the current surah, with jump-to-ayah and delete.

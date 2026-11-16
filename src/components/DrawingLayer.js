@@ -4,6 +4,7 @@ import React, {
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { changeApplied } from '../redux/annotations/annotationsSlice';
+import { ARABIC_EDITION } from '../redux/chapters/chaptersSlice';
 import {
   boundsOf, boxesTouch, distanceToStroke, eraseFromStroke, newId, pathOf, round,
   simplify, toPixels, toUnits,
@@ -35,32 +36,33 @@ const distanceToRect = (x, y, rect) => Math.hypot(
 const nearestWord = (article, origin, box) => {
   const x = (box.left + box.right) / 2 + origin.left;
   const y = (box.top + box.bottom) / 2 + origin.top;
-  let block = null;
+  // When the ayahs flow one after another, several of them share a line: look
+  // at every ayah that is level with the stroke.
+  const blocks = [];
   let blockDistance = Infinity;
   article.querySelectorAll('[data-ayah]').forEach((candidate) => {
     const rect = candidate.getBoundingClientRect();
     const distance = Math.max(rect.top - y, 0, y - rect.bottom);
-    if (distance < blockDistance) {
-      block = candidate;
-      blockDistance = distance;
-    }
+    blocks.push({ candidate, distance });
+    if (distance < blockDistance) blockDistance = distance;
   });
-  if (!block) return null;
   let best = null;
   let bestScore = Infinity;
-  block.querySelectorAll('.w').forEach((word) => {
-    const rect = word.getBoundingClientRect();
-    if (!rect.height) return;
-    const centre = Math.hypot(x - (rect.left + rect.right) / 2, y - (rect.top + rect.bottom) / 2);
-    const score = distanceToRect(x, y, rect) * 1000 + centre;
-    if (score < bestScore) {
-      best = { word, rect };
-      bestScore = score;
-    }
+  blocks.filter(({ distance }) => distance <= blockDistance + 1).forEach(({ candidate }) => {
+    candidate.querySelectorAll('.w').forEach((word) => {
+      const rect = word.getBoundingClientRect();
+      if (!rect.height) return;
+      const centre = Math.hypot(x - (rect.left + rect.right) / 2, y - (rect.top + rect.bottom) / 2);
+      const score = distanceToRect(x, y, rect) * 1000 + centre;
+      if (score < bestScore) {
+        best = { word, rect, block: candidate };
+        bestScore = score;
+      }
+    });
   });
   if (!best) return null;
   return {
-    ayah: Number(block.dataset.ayah),
+    ayah: Number(best.block.dataset.ayah),
     anchor: { text: best.word.dataset.t, word: Number(best.word.dataset.w) },
     geometry: {
       cx: best.rect.left - origin.left + best.rect.width / 2,
@@ -71,7 +73,7 @@ const nearestWord = (article, origin, box) => {
 };
 
 function DrawingLayer({
-  articleRef, surah, drawings, active, tool, color, width, selectedId, onSelect,
+  articleRef, surah, drawings, active, tool, color, width, selectedId, onSelect, layoutKey,
 }) {
   const dispatch = useDispatch();
   const svgRef = useRef(null);
@@ -127,7 +129,7 @@ function DrawingLayer({
       if (anchor) next[drawing.id] = anchor;
     });
     setAnchors(next);
-  }, [drawings, tick, articleRef]);
+  }, [drawings, tick, articleRef, layoutKey]);
 
   const originOf = () => articleRef.current.getBoundingClientRect();
   const pointOf = (event, origin) => [event.clientX - origin.left, event.clientY - origin.top];
@@ -222,6 +224,7 @@ function DrawingLayer({
       type: 'drawing',
       data: {
         anchor: target.anchor,
+        ...(target.anchor.text === 'ar' ? { edition: ARABIC_EDITION } : {}),
         strokes: [toUnits(stroke, target.geometry)],
         color,
         width: round(widthPx / target.geometry.unit),
@@ -365,8 +368,9 @@ DrawingLayer.propTypes = {
   width: PropTypes.number.isRequired,
   selectedId: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
+  layoutKey: PropTypes.string,
 };
 
-DrawingLayer.defaultProps = { selectedId: null };
+DrawingLayer.defaultProps = { selectedId: null, layoutKey: '' };
 
 export default DrawingLayer;

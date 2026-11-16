@@ -2,7 +2,9 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const API = 'https://api.alquran.cloud/v1';
-export const ARABIC_EDITION = 'quran-uthmani';
+// The Arabic text ships with the app (src/data/quran), in the King Fahd
+// Complex encoding that matches the UthmanicHafs font.
+export const ARABIC_EDITION = 'qpc-hafs';
 export const TRANSLATION_EDITION = 'en.asad';
 
 export const initialState = {
@@ -38,32 +40,43 @@ export const getChapters = createAsyncThunk(
   { condition: (_, { getState }) => getState().chapters.chapters.length === 0 },
 );
 
-// One surah with its Arabic text and English translation.
+// One surah: the Arabic text comes with the app, the English translation is
+// downloaded. Without a connection the surah still opens, Arabic only.
 export const getSurah = createAsyncThunk(
   'chapters/getSurah',
   async (number, { rejectWithValue }) => {
+    let arabic;
     try {
-      const response = await axios.get(
-        `${API}/surah/${number}/editions/${ARABIC_EDITION},${TRANSLATION_EDITION}`,
-      );
-      const [arabic, english] = response.data.data;
-      return {
-        number: arabic.number,
-        name: arabic.name,
-        englishName: arabic.englishName,
-        englishNameTranslation: arabic.englishNameTranslation,
-        ayahs: arabic.ayahs.map((ayah, index) => ({
-          number: ayah.number,
-          numberInSurah: ayah.numberInSurah,
-          text: ayah.text,
-          translation: english?.ayahs[index]?.text || '',
-        })),
-      };
+      arabic = (await import(`../../data/quran/${number}.json`)).default;
     } catch (error) {
       return rejectWithValue(describeError(error));
     }
+    let english = null;
+    try {
+      const response = await axios.get(`${API}/surah/${number}/${TRANSLATION_EDITION}`);
+      english = response.data.data;
+    } catch (error) {
+      english = null;
+    }
+    return {
+      number,
+      name: english?.name,
+      englishName: english?.englishName,
+      englishNameTranslation: english?.englishNameTranslation,
+      translationLoaded: Boolean(english),
+      ayahs: arabic.map((text, index) => ({
+        numberInSurah: index + 1,
+        text,
+        translation: english?.ayahs[index]?.text || '',
+      })),
+    };
   },
-  { condition: (number, { getState }) => !getState().chapters.surahs[number] },
+  {
+    condition: (number, { getState }) => {
+      const surah = getState().chapters.surahs[number];
+      return !surah || !surah.translationLoaded;
+    },
+  },
 );
 
 export const chaptersSlice = createSlice({

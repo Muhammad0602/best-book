@@ -7,7 +7,9 @@ import { BiArrowBack } from 'react-icons/bi';
 import {
   getChapters, getSurah, TRANSLATION_EDITION, ARABIC_EDITION,
 } from '../redux/chapters/chaptersSlice';
-import { changeApplied, historyCleared } from '../redux/annotations/annotationsSlice';
+import { changeApplied, historyCleared, migrated } from '../redux/annotations/annotationsSlice';
+import { isLegacy, migrate } from '../lib/legacy';
+import fatiha from '../data/quran/1.json';
 import { newId } from '../lib/geometry';
 import Ayah from './Ayah';
 import DrawingLayer from './DrawingLayer';
@@ -15,6 +17,7 @@ import Toolbar, { HIGHLIGHT_COLORS, PEN_COLORS, PEN_WIDTHS } from './Toolbar';
 import { HighlightSheet, MarksSheet } from './Sheets';
 
 const NONE = [];
+const [BISMILLAH] = fatiha;
 const TRANSLATION_KEY = 'bestbook.showTranslation';
 
 // The translation is hidden until the reader switches it on; the choice is
@@ -50,7 +53,7 @@ function Details() {
   } = useSelector((store) => store.chapters);
   const items = useSelector((store) => store.annotations.items);
   const surah = surahs[id];
-  const info = surah || chapters[id - 1];
+  const info = chapters[id - 1] || surah;
 
   const articleRef = useRef(null);
   const dragRef = useRef(null);
@@ -67,6 +70,7 @@ function Details() {
   const toggleTranslation = () => {
     const next = !showTranslation;
     setShowTranslation(next);
+    if (next && surah && !surah.translationLoaded) dispatch(getSurah(id));
     try {
       window.localStorage.setItem(TRANSLATION_KEY, next ? '1' : '0');
     } catch (error) {
@@ -92,6 +96,18 @@ function Details() {
     () => annotations.filter((annotation) => annotation.type === 'drawing'),
     [annotations],
   );
+
+  // Marks made on the earlier edition of the Arabic text are moved onto the
+  // same words of the current one.
+  useEffect(() => {
+    const legacy = annotations.filter(isLegacy);
+    if (legacy.length === 0) return undefined;
+    let cancelled = false;
+    import('../data/legacy-uthmani.json').then((module) => {
+      if (!cancelled) dispatch(migrated(legacy.map((item) => migrate(item, module.default))));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [annotations, dispatch]);
   const highlightsByAyah = useMemo(() => {
     const map = {};
     annotations.forEach((annotation) => {
@@ -268,16 +284,25 @@ function Details() {
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
         <article
           ref={articleRef}
-          className={`ayahs mode-${mode}`}
+          className={`ayahs mode-${mode}${showTranslation ? '' : ' flow'}`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           onClick={onClick}
         >
+          {id !== 1 && id !== 9 && (
+            <p className="bismillah" dir="rtl" lang="ar">{BISMILLAH}</p>
+          )}
+          {showTranslation && !surah.translationLoaded && (
+            <p className="reader-note" dir="ltr">
+              The translation could not be loaded. Check your connection and
+              tap Translation again.
+            </p>
+          )}
           {surah.ayahs.map((ayah) => (
             <Ayah
-              key={ayah.number}
+              key={ayah.numberInSurah}
               ayah={ayah}
               highlights={highlightsByAyah[ayah.numberInSurah] || NONE}
               drag={drag && drag.ayah === ayah.numberInSurah ? drag : null}
@@ -294,6 +319,7 @@ function Details() {
             width={penWidth}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            layoutKey={showTranslation ? 'blocks' : 'flow'}
           />
         </article>
       )}

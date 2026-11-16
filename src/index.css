@@ -4,6 +4,11 @@
 }
 
 @font-face {
+  font-family: 'UthmanicHafs';
+  src: url('./fonts/UthmanicHafs1Ver18.woff2') format('woff2');
+}
+
+@font-face {
   font-family: 'MyFont2';
   src: url('./fonts/_PDMS_Saleem_QuranFont.ttf') format('truetype');
 }
@@ -108,46 +113,72 @@ body {
   text-shadow: 1px 0 15px rgb(0, 0, 0);
 }
 
+/* The reading page: Madinah-style script on a light page. */
 .ayahs {
-  font-family: 'MyFont', sans-serif;
-  font-size: 1.5rem;
-  margin: 2rem auto 4rem;
-  padding: 0.5rem;
+  max-width: 62rem;
+  margin: 1.5rem auto 4rem;
+  padding: 1rem 0.9rem;
   position: relative;
+  background-color: #fff;
+  color: #0b1437;
+  border-radius: 12px;
 }
 
 .ayah {
-  text-align: right;
-  padding: 0.5rem;
-  padding-right: 1rem;
   margin: 0;
-  font-size: 1.5em;
-  letter-spacing: 1.5px;
+  padding: 0.4rem 0.3rem;
 }
 
-.ayah:nth-child(odd) {
-  background-color: white;
-  color: black;
+.arabic-ayah,
+.bismillah {
+  font-family: 'UthmanicHafs', 'MyFont', serif;
+  font-size: 28px;
+  line-height: 2.05;
 }
 
-.ayah:nth-child(even) {
-  background-color: black;
-  color: white;
+.arabic-ayah {
+  text-align: right;
+}
+
+.bismillah {
+  margin: 0 0 0.4rem;
+  text-align: center;
 }
 
 .english-ayah {
+  margin-bottom: 0.6rem;
+  padding: 0.5rem 0.7rem;
   text-align: left;
-  font-size: 0.7em;
-  letter-spacing: 1.2px;
-  word-spacing: 2px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #2a3140;
+  background-color: #f2f5f3;
+  border-radius: 8px;
 }
 
 .ayah-ending {
-  border: 1px solid #0f0e0e;
-  border-radius: 50%;
-  padding: 0 1rem;
-  font-size: large;
-  margin-right: 1rem;
+  margin: 0 0.12em;
+}
+
+.reader-note {
+  margin: 0 0 0.8rem;
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  text-align: center;
+  color: #8a5a00;
+}
+
+/* Translation off: the ayahs follow each other like on a page of the mushaf. */
+.ayahs.flow {
+  direction: rtl;
+  text-align: justify;
+}
+
+.flow .ayah-block,
+.flow .arabic-ayah {
+  display: inline;
+  padding: 0;
 }
 
 .details {
@@ -240,8 +271,13 @@ body {
     font-size: 25px;
   }
 
-  .ayah {
-    font-size: 2em;
+  .arabic-ayah,
+  .bismillah {
+    font-size: 36px;
+  }
+
+  .english-ayah {
+    font-size: 19px;
   }
 }
 
@@ -250,11 +286,12 @@ body {
     font-size: 30px;
   }
 
-  .ayah {
-    font-size: 2.5em;
+  .arabic-ayah,
+  .bismillah {
+    font-size: 42px;
   }
 
   .english-ayah {
-    font-size: 1.2em;
+    font-size: 21px;
   }
 }

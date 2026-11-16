@@ -7,7 +7,7 @@ import { createSlice } from '@reduxjs/toolkit';
   type 'highlight' -> data: { text: 'ar' | 'en', edition, start, end, color }
     start/end are word indexes inside the ayah (inclusive).
 
-  type 'drawing' -> data: { anchor: { text, word }, strokes, color, width }
+  type 'drawing' -> data: { anchor: { text, word }, edition, strokes, color, width }
     Every point is stored relative to the centre of the anchor word and
     measured in "word heights", so a mark keeps its place next to the same
     word on any screen size.
@@ -84,6 +84,13 @@ export const annotationsSlice = createSlice({
       state.undo = [];
       state.redo = [];
     },
+    // Marks rewritten for a new edition of the text: not a user edit, so
+    // there is nothing to undo.
+    migrated: (state, action) => {
+      applyChange(state, { added: action.payload });
+      state.undo = [];
+      state.redo = [];
+    },
     // Annotations fetched from the server. Local edits that are still
     // waiting in the outbox win over what the server has.
     remoteMerged: (state, action) => {
@@ -109,7 +116,7 @@ export const annotationsSlice = createSlice({
 });
 
 export const {
-  ownerLoaded, changeApplied, undone, redone, historyCleared,
+  ownerLoaded, changeApplied, undone, redone, historyCleared, migrated,
   remoteMerged, outboxFlushed, syncStatusSet,
 } = annotationsSlice.actions;
 

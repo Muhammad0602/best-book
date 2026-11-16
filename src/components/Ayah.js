@@ -17,6 +17,9 @@ const coverage = (count, highlights, text) => {
 
 const topOf = (cover) => (cover ? cover[cover.length - 1] : null);
 
+// The font draws a number written in Arabic digits as the end-of-ayah sign.
+const arabicNumber = (value) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[digit]);
+
 function Words({
   words, text, covers, drag,
 }) {
@@ -43,7 +46,7 @@ function Words({
       // eslint-disable-next-line react/no-array-index-key
       <React.Fragment key={index}>
         <span className={`w${classFor(index)}`} data-t={text} data-w={index}>{word}</span>
-        {gap ? <span className={`sp${gap}`}> </span> : ' '}
+        {gap ? <span className={`sp${gap}`}> </span> : index < words.length - 1 && ' '}
       </React.Fragment>
     );
   });
@@ -67,7 +70,12 @@ function Ayah({
     <div className="ayah-block" data-ayah={ayah.numberInSurah} id={`ayah-${ayah.numberInSurah}`}>
       <p className="ayah arabic-ayah" dir="rtl" lang="ar">
         <Words words={arabic} text="ar" covers={arabicCovers} drag={drag} />
-        <span className="ayah-ending">{ayah.numberInSurah}</span>
+        {/* A non-breaking space: the ayah sign never starts a line on its own. */}
+        {'\u00A0'}
+        <span className="ayah-ending" aria-label={`Ayah ${ayah.numberInSurah}`}>
+          {arabicNumber(ayah.numberInSurah)}
+        </span>
+        {' '}
       </p>
       {showTranslation && (
         <p className="ayah english-ayah" dir="ltr" lang="en">
