@@ -1,57 +1,6 @@
 /* Styles for accounts, highlights, drawings and the study toolbar. */
 
-/* ---------- header additions ---------- */
-
-.home-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: inherit;
-  text-decoration: none;
-}
-
-.header-compact {
-  margin-top: 0.6rem;
-}
-
-.header-compact img {
-  width: 3.2em;
-  height: 3.2em;
-}
-
-.header-compact h1 {
-  font-size: 1.2em;
-  margin: 0;
-}
-
-.header-compact h1 span {
-  display: none;
-}
-
-.account-link {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  padding: 0.4rem;
-  font-size: 1.7rem;
-  line-height: 1;
-  color: white;
-}
-
-.surah-container {
-  position: relative;
-  padding-bottom: 0.8rem;
-}
-
-.surah-marks {
-  font-family: system-ui, sans-serif;
-  font-size: 12px;
-  margin-top: 0.4rem;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-}
+/* ---------- buttons ---------- */
 
 .plain-button {
   cursor: pointer;
@@ -59,14 +8,16 @@
   font-size: 16px;
   padding: 10px 18px;
   border: none;
-  border-radius: 8px;
-  background-color: black;
+  min-height: 44px;
+  border-radius: 12px;
+  background-color: var(--green-700);
   color: white;
 }
 
 .plain-button.secondary {
   background-color: white;
-  color: black;
+  color: var(--green-900);
+  box-shadow: inset 0 0 0 1px var(--green-700);
 }
 
 .plain-button:disabled {
@@ -171,6 +122,7 @@
   bottom: 0;
   z-index: 20;
   padding: 6px 8px 4px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
   font-family: system-ui, sans-serif;
   font-size: 14px;
   text-align: left;
@@ -325,7 +277,7 @@
   position: fixed;
   left: 8px;
   right: 8px;
-  bottom: 150px;
+  bottom: calc(150px + env(safe-area-inset-bottom));
   z-index: 30;
   max-width: 560px;
   max-height: 45vh;
@@ -420,13 +372,14 @@
 .account-card {
   max-width: 420px;
   margin: 2rem auto;
-  padding: 20px;
-  font-family: system-ui, sans-serif;
+  padding: 22px;
   font-size: 16px;
   text-align: left;
-  border-radius: 14px;
-  background-color: white;
-  color: black;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background-color: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 2px 12px rgba(11, 61, 46, 0.08);
 }
 
 .account-card h2 {
@@ -459,10 +412,6 @@
   gap: 8px;
 }
 
-.account-card .plain-button.secondary {
-  box-shadow: inset 0 0 0 1px black;
-}
-
 .link-button {
   cursor: pointer;
   margin-top: 14px;
@@ -490,5 +439,22 @@
 
   .toolbar .mode {
     font-size: 10.5px;
+  }
+}
+
+/* Tablets and laptops: the toolbar becomes a dock in the middle of the screen. */
+@media (min-width: 900px) {
+  .toolbar {
+    left: 50%;
+    right: auto;
+    bottom: 14px;
+    width: 680px;
+    padding: 8px 12px 6px;
+    border-radius: 18px;
+    transform: translateX(-50%);
+  }
+
+  .sheet {
+    bottom: 170px;
   }
 }

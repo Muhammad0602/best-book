@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { BiArrowBack } from 'react-icons/bi';
 import {
   accountsAvailable, signIn, signUp, signOut, sendPasswordReset, updatePassword,
 } from '../lib/sync';
@@ -162,10 +161,6 @@ function Account() {
 
   return (
     <div className="details account">
-      <button className="back-button" onClick={() => navigate('/')} type="button">
-        <BiArrowBack aria-hidden="true" />
-        <span className="visually-hidden">Go back</span>
-      </button>
       <div className="account-card">
         <h2>Your account</h2>
         {body}

@@ -1,50 +1,39 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
-import { CgSearch } from 'react-icons/cg';
-import { BiUser, BiUserCheck } from 'react-icons/bi';
+import { useSelector } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { BiArrowBack, BiUser, BiUserCheck } from 'react-icons/bi';
 import logo from '../images/quran.png';
-import { setSearch } from '../redux/chapters/chaptersSlice';
 
 function Header() {
-  const dispatch = useDispatch();
   const { pathname } = useLocation();
-  const { search } = useSelector((store) => store.chapters);
+  const navigate = useNavigate();
   const user = useSelector((store) => store.auth.user);
   const home = pathname === '/';
 
   return (
-    <>
+    <header className="app-bar">
+      {home ? <span className="bar-spacer" /> : (
+        <button
+          type="button"
+          className="bar-button"
+          aria-label="Back to all surahs"
+          onClick={() => navigate('/')}
+        >
+          <BiArrowBack aria-hidden="true" />
+        </button>
+      )}
+      <Link to="/" className="home-link" aria-label="Quran Karim, all surahs">
+        <img src={logo} alt="" />
+        <span>Quran Karim</span>
+      </Link>
       <Link
         to="/account"
-        className="account-link"
+        className="bar-button"
         aria-label={user ? `Account (${user.email})` : 'Sign in'}
       >
         {user ? <BiUserCheck aria-hidden="true" /> : <BiUser aria-hidden="true" />}
       </Link>
-      <div className={`header${home ? '' : ' header-compact'}`}>
-        <Link to="/" className="home-link" aria-label="Quran Karim, all surahs">
-          <img src={logo} alt="" />
-          <h1>
-            Quran Karim
-            <span>(114 surahs)</span>
-          </h1>
-        </Link>
-      </div>
-      {home && (
-        <div className="header search-container">
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search a surah"
-            aria-label="Search a surah"
-            value={search}
-            onChange={(e) => dispatch(setSearch(e.target.value))}
-          />
-          <CgSearch aria-hidden="true" className="search-icon" />
-        </div>
-      )}
-    </>
+    </header>
   );
 }
 

@@ -1,18 +1,23 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useLayoutEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { getChapters } from '../redux/chapters/chaptersSlice';
+import { CgSearch } from 'react-icons/cg';
+import { BiBookmark } from 'react-icons/bi';
+import { setSearch } from '../redux/chapters/chaptersSlice';
+import { readPref } from '../lib/prefs';
+
+// Where the list was scrolled to, so coming back from a surah returns there.
+let savedScroll = 0;
 
 function Home() {
-  const {
-    chapters, search, isLoading, error,
-  } = useSelector((store) => store.chapters);
+  const { chapters, search } = useSelector((store) => store.chapters);
   const items = useSelector((store) => store.annotations.items);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(getChapters());
-  }, [dispatch]);
+  useLayoutEffect(() => {
+    window.scrollTo(0, savedScroll);
+    return () => { savedScroll = window.scrollY; };
+  }, []);
 
   // How many marks the reader has in each surah.
   const marks = useMemo(() => {
@@ -23,51 +28,72 @@ function Home() {
     return counts;
   }, [items]);
 
-  if (isLoading) {
-    return (
-      <div className="loading">
-        <div className="spinner" />
-      </div>
-    );
-  }
-
-  if (error && chapters.length === 0) {
-    return (
-      <div className="error-container">
-        <h2>Oops, something went wrong. Please try again!</h2>
-        <p>{error}</p>
-        <button type="button" className="plain-button" onClick={() => dispatch(getChapters())}>
-          Try again
-        </button>
-      </div>
-    );
-  }
+  const lastRead = readPref('lastRead', null);
+  const lastSurah = lastRead ? chapters[lastRead.surah - 1] : null;
 
   const term = search.trim().toLowerCase();
   const visible = chapters.filter((surah) => !term
     || surah.englishName.toLowerCase().includes(term)
+    || surah.englishNameTranslation.toLowerCase().includes(term)
     || surah.name.includes(term)
     || surah.number === parseInt(term, 10));
 
   return (
-    <div className="list-surahs">
-      {visible.map((surah) => (
-        <Link
-          to={`/Details/${surah.number}`}
-          key={surah.number}
-          className="surah-container"
-        >
-          <h2>{surah.name}</h2>
-          <p>{surah.englishName}</p>
-          <h4 className="surah-number">{surah.number}</h4>
-          {marks[surah.number] > 0 && (
-            <span className="surah-marks">
-              {`${marks[surah.number]} ${marks[surah.number] === 1 ? 'mark' : 'marks'}`}
-            </span>
-          )}
-        </Link>
-      ))}
-    </div>
+    <>
+      <div className="hero">
+        <h1>The Noble Quran</h1>
+        <p>114 surahs · read, highlight and take notes</p>
+        <div className="search-container">
+          <CgSearch aria-hidden="true" className="search-icon" />
+          <input
+            className="search-input"
+            type="search"
+            placeholder="Search by name or number"
+            aria-label="Search a surah"
+            value={search}
+            onChange={(e) => dispatch(setSearch(e.target.value))}
+          />
+        </div>
+      </div>
+      <div className="home-body">
+        {lastSurah && !term && (
+          <Link
+            to={`/Details/${lastSurah.number}${lastRead.ayah > 1 ? `?ayah=${lastRead.ayah}` : ''}`}
+            className="continue-card"
+          >
+            <BiBookmark aria-hidden="true" />
+            <div>
+              <strong>Continue reading</strong>
+              <span>{`${lastSurah.englishName}, ayah ${lastRead.ayah}`}</span>
+            </div>
+          </Link>
+        )}
+        <div className="list-surahs">
+          {visible.map((surah) => (
+            <Link
+              to={`/Details/${surah.number}`}
+              key={surah.number}
+              className="surah-container"
+            >
+              <span className="surah-number">{surah.number}</span>
+              <div className="surah-info">
+                <strong>{surah.englishName}</strong>
+                <span>{`${surah.englishNameTranslation} · ${surah.numberOfAyahs} ayahs`}</span>
+                {marks[surah.number] > 0 && (
+                  <span className="surah-marks">
+                    {`${marks[surah.number]} ${marks[surah.number] === 1 ? 'mark' : 'marks'}`}
+                  </span>
+                )}
+              </div>
+              <span className="surah-arabic" lang="ar" dir="rtl">{surah.name}</span>
+            </Link>
+          ))}
+        </div>
+        {visible.length === 0 && (
+          <p className="empty-note">{`No surah matches “${search.trim()}”.`}</p>
+        )}
+      </div>
+    </>
   );
 }
 

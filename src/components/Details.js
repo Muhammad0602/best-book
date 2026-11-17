@@ -2,8 +2,8 @@ import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { BiArrowBack } from 'react-icons/bi';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { BiChevronLeft, BiChevronRight } from 'react-icons/bi';
 import {
   getChapters, getSurah, TRANSLATION_EDITION, ARABIC_EDITION,
 } from '../redux/chapters/chaptersSlice';
@@ -11,6 +11,7 @@ import { changeApplied, historyCleared, migrated } from '../redux/annotations/an
 import { isLegacy, migrate } from '../lib/legacy';
 import fatiha from '../data/quran/1.json';
 import { newId } from '../lib/geometry';
+import { readPref, writePref } from '../lib/prefs';
 import Ayah from './Ayah';
 import DrawingLayer from './DrawingLayer';
 import Toolbar, { HIGHLIGHT_COLORS, PEN_COLORS, PEN_WIDTHS } from './Toolbar';
@@ -18,6 +19,9 @@ import { HighlightSheet, MarksSheet } from './Sheets';
 
 const NONE = [];
 const [BISMILLAH] = fatiha;
+const SCALES = [0.85, 1, 1.15, 1.3, 1.5];
+const DEFAULT_SCALE = 1;
+const BAR_HEIGHT = 76; // the top bar, plus a little air
 const TRANSLATION_KEY = 'bestbook.showTranslation';
 
 // The translation is hidden until the reader switches it on; the choice is
@@ -44,9 +48,10 @@ const wordAt = (x, y) => {
 };
 
 function Details() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { number } = useParams();
+  const [params] = useSearchParams();
+  const resumeAyah = Number(params.get('ayah')) || 0;
   const id = parseInt(number, 10);
   const {
     chapters, surahs, surahLoading, surahError,
@@ -66,6 +71,57 @@ function Details() {
   const [drag, setDrag] = useState(null);
   const [sheet, setSheet] = useState(null); // { ayah, text, word } | 'list'
   const [showTranslation, setShowTranslation] = useState(readShowTranslation);
+  const [scaleIndex, setScaleIndex] = useState(() => {
+    const saved = readPref('textScale', DEFAULT_SCALE);
+    return SCALES.includes(saved) ? SCALES.indexOf(saved) : DEFAULT_SCALE;
+  });
+  const loaded = Boolean(surah);
+
+  const changeScale = (step) => {
+    const next = Math.min(SCALES.length - 1, Math.max(0, scaleIndex + step));
+    setScaleIndex(next);
+    writePref('textScale', SCALES[next]);
+  };
+
+  // "Continue reading": open at the ayah where the reader stopped.
+  useEffect(() => {
+    if (!loaded || resumeAyah < 2) return undefined;
+    let cancelled = false;
+    const go = () => {
+      const element = cancelled ? null : document.getElementById(`ayah-${resumeAyah}`);
+      if (!element) return;
+      window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - BAR_HEIGHT);
+    };
+    const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    fonts.then(() => setTimeout(go, 50));
+    return () => { cancelled = true; };
+  }, [loaded, resumeAyah, id]);
+
+  // Remember the place: the first ayah that is visible below the top bar.
+  useEffect(() => {
+    if (!loaded) return undefined;
+    let timer = null;
+    const save = () => {
+      timer = null;
+      const blocks = articleRef.current ? articleRef.current.querySelectorAll('[data-ayah]') : [];
+      let ayah = 1;
+      for (let i = 0; i < blocks.length; i += 1) {
+        if (blocks[i].getBoundingClientRect().bottom > BAR_HEIGHT) {
+          ayah = Number(blocks[i].dataset.ayah);
+          break;
+        }
+      }
+      writePref('lastRead', { surah: id, ayah });
+    };
+    const onScroll = () => { if (!timer) timer = setTimeout(save, 400); };
+    const last = readPref('lastRead', null);
+    if (!last || last.surah !== id) writePref('lastRead', { surah: id, ayah: 1 });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [loaded, id]);
 
   const toggleTranslation = () => {
     const next = !showTranslation;
@@ -252,17 +308,36 @@ function Details() {
 
   return (
     <div className="details">
-      <button className="back-button" onClick={() => navigate('/')} type="button">
-        <BiArrowBack aria-hidden="true" />
-        <span className="visually-hidden">Go back to the home page</span>
-      </button>
-      <h2>
-        {info?.name}
-        {' '}
-        <span>
-          {info ? `(${info.englishNameTranslation})` : ''}
-        </span>
-      </h2>
+      {info && (
+        <div className="surah-head">
+          <h2 className="surah-title" lang="ar" dir="rtl">{info.name}</h2>
+          <p className="surah-sub">
+            {`${info.number}. ${info.englishName} · ${info.englishNameTranslation}`}
+          </p>
+          <p className="surah-meta">{`${info.numberOfAyahs} ayahs · ${info.revelationType}`}</p>
+          {surah && (
+            <div className="text-size" role="group" aria-label="Text size">
+              <button
+                type="button"
+                aria-label="Smaller text"
+                disabled={scaleIndex === 0}
+                onClick={() => changeScale(-1)}
+              >
+                A−
+              </button>
+              <button
+                type="button"
+                className="bigger"
+                aria-label="Larger text"
+                disabled={scaleIndex === SCALES.length - 1}
+                onClick={() => changeScale(1)}
+              >
+                A+
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {!surah && surahLoading && (
         <div className="loading"><div className="spinner" /></div>
@@ -285,6 +360,7 @@ function Details() {
         <article
           ref={articleRef}
           className={`ayahs mode-${mode}${showTranslation ? '' : ' flow'}`}
+          style={{ '--scale': SCALES[scaleIndex] }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -319,9 +395,26 @@ function Details() {
             width={penWidth}
             selectedId={selectedId}
             onSelect={setSelectedId}
-            layoutKey={showTranslation ? 'blocks' : 'flow'}
+            layoutKey={`${showTranslation ? 'blocks' : 'flow'}-${scaleIndex}`}
           />
         </article>
+      )}
+
+      {surah && (
+        <nav className="surah-nav" aria-label="Previous and next surah">
+          {id > 1 ? (
+            <Link to={`/Details/${id - 1}`} className="nav-link">
+              <BiChevronLeft aria-hidden="true" />
+              <span>{chapters[id - 2].englishName}</span>
+            </Link>
+          ) : <span />}
+          {id < chapters.length ? (
+            <Link to={`/Details/${id + 1}`} className="nav-link">
+              <span>{chapters[id].englishName}</span>
+              <BiChevronRight aria-hidden="true" />
+            </Link>
+          ) : <span />}
+        </nav>
       )}
 
       {surah && sheet === 'list' && (

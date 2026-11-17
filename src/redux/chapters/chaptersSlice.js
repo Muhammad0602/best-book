@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
+import surahList from '../../data/surahs.json';
 
 const API = 'https://api.alquran.cloud/v1';
 // The Arabic text ships with the app (src/data/quran), in the King Fahd
@@ -9,7 +10,8 @@ export const TRANSLATION_EDITION = 'en.asad';
 
 export const initialState = {
   search: '',
-  chapters: [],
+  // Names of the 114 surahs: bundled, so the list never needs the network.
+  chapters: surahList,
   surahs: {},
   isLoading: false,
   surahLoading: false,
@@ -45,6 +47,9 @@ export const getChapters = createAsyncThunk(
 export const getSurah = createAsyncThunk(
   'chapters/getSurah',
   async (number, { rejectWithValue }) => {
+    if (!Number.isInteger(number) || number < 1 || number > surahList.length) {
+      return rejectWithValue('There is no surah with that number.');
+    }
     let arabic;
     try {
       arabic = (await import(`../../data/quran/${number}.json`)).default;
