@@ -74,6 +74,7 @@ const nearestWord = (article, origin, box) => {
 
 function DrawingLayer({
   articleRef, surah, drawings, active, tool, color, width, selectedId, onSelect, layoutKey,
+  translationEdition,
 }) {
   const dispatch = useDispatch();
   const svgRef = useRef(null);
@@ -224,7 +225,7 @@ function DrawingLayer({
       type: 'drawing',
       data: {
         anchor: target.anchor,
-        ...(target.anchor.text === 'ar' ? { edition: ARABIC_EDITION } : {}),
+        edition: target.anchor.text === 'ar' ? ARABIC_EDITION : translationEdition,
         strokes: [toUnits(stroke, target.geometry)],
         color,
         width: round(widthPx / target.geometry.unit),
@@ -369,6 +370,7 @@ DrawingLayer.propTypes = {
   selectedId: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
   layoutKey: PropTypes.string,
+  translationEdition: PropTypes.string.isRequired,
 };
 
 DrawingLayer.defaultProps = { selectedId: null, layoutKey: '' };

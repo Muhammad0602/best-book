@@ -425,19 +425,91 @@ a {
   padding: 0;
 }
 
-.surah-nav {
+/* Turning a page: the new one slides in from the side it comes from. */
+.turn-next {
+  animation: turn-next 0.34s ease-out;
+}
+
+.turn-previous {
+  animation: turn-previous 0.34s ease-out;
+}
+
+.translation-bar {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.translation-bar label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.translation-bar select,
+.tafsir-controls select {
+  max-width: 100%;
+  height: 42px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.ayah-ending[data-tafsir] {
+  cursor: pointer;
+}
+
+.tafsir-link {
+  cursor: pointer;
+  display: block;
+  margin: -0.2rem 0 1rem auto;
+  padding: 6px 12px;
+  font-family: var(--ui);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background-color: white;
+  color: var(--green-700);
+}
+
+.pager {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+}
+
+.pager-info {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.pager-info strong {
+  font-size: 14px;
+  color: var(--ink);
 }
 
 .nav-link {
+  cursor: pointer;
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   min-height: 44px;
-  max-width: 48%;
-  padding: 8px 12px;
+  max-width: 38%;
+  padding: 8px 10px;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
@@ -458,12 +530,131 @@ a {
   font-size: 22px;
 }
 
+.nav-link:disabled {
+  cursor: default;
+  visibility: hidden;
+}
+
+/* ---------- tafsir ---------- */
+
+.tafsir-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background-color: rgba(11, 20, 55, 0.45);
+  animation: fade-in 0.2s ease-out;
+}
+
+.tafsir-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 760px;
+  height: 88%;
+  text-align: left;
+  border-radius: 18px 18px 0 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.3);
+  animation: slide-up 0.28s ease-out;
+}
+
+.tafsir-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 0 18px;
+}
+
+.tafsir-head h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.tafsir-panel .icon-button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--green-900);
+}
+
+.tafsir-panel .icon-button:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.tafsir-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px 10px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tafsir-controls label {
+  min-width: 0;
+}
+
+.tafsir-steps {
+  display: flex;
+  flex: none;
+}
+
+.tafsir-body {
+  flex: 1 1 auto;
+  padding: 14px 18px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  font-family: 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', tahoma, serif;
+  font-size: 19px;
+  line-height: 2;
+  text-align: right;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tafsir-body p {
+  margin: 0 0 0.9em;
+}
+
+.tafsir-body .tafsir-ayah {
+  padding: 10px 14px;
+  font-family: 'UthmanicHafs', serif;
+  font-size: 26px;
+  line-height: 1.9;
+  border-right: 3px solid var(--gold);
+  border-radius: 10px 4px 4px 10px;
+  background-color: #fff8e6;
+  color: var(--green-900);
+}
+
+.tafsir-note {
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--muted);
+}
+
 /* ---------- states ---------- */
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.spinner.small {
+  width: 36px;
+  height: 36px;
+  margin-top: 1.5rem;
+  border-width: 4px;
 }
 
 .spinner {
@@ -509,6 +700,61 @@ a {
   }
 }
 
+@keyframes turn-next {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes turn-previous {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-next,
+  .turn-previous,
+  .tafsir-backdrop,
+  .tafsir-panel {
+    animation: none;
+  }
+}
+
 @media screen and (min-width: 768px) {
   .hero {
     padding: 34px 16px 38px;
@@ -537,6 +783,20 @@ a {
 
   .english-ayah {
     font-size: calc(18px * var(--scale, 1));
+  }
+
+  .tafsir-backdrop {
+    align-items: center;
+  }
+
+  .tafsir-panel {
+    height: 84%;
+    border-radius: 18px;
+  }
+
+  .tafsir-body {
+    padding: 18px 28px 28px;
+    font-size: 21px;
   }
 }
 

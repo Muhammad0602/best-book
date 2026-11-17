@@ -1,18 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import surahList from '../../data/surahs.json';
+import { loadTranslation } from '../../lib/sources';
 
 const API = 'https://api.alquran.cloud/v1';
 // The Arabic text ships with the app (src/data/quran), in the King Fahd
 // Complex encoding that matches the UthmanicHafs font.
 export const ARABIC_EDITION = 'qpc-hafs';
-export const TRANSLATION_EDITION = 'en.asad';
 
 export const initialState = {
   search: '',
   // Names of the 114 surahs: bundled, so the list never needs the network.
   chapters: surahList,
   surahs: {},
+  // "<edition>:<surah>" -> { status: 'loading' | 'ready' | 'error', texts }
+  translations: {},
   isLoading: false,
   surahLoading: false,
   error: '',
@@ -28,7 +30,9 @@ const describeError = (error) => (
   || 'Unknown error'
 );
 
-// The list of the 114 surahs (names only), a small request.
+export const translationKey = (edition, surah) => `${edition}:${surah}`;
+
+// The list of the 114 surahs (names only). Only used if the bundled list is missing.
 export const getChapters = createAsyncThunk(
   'chapters/getChapters',
   async (_, { rejectWithValue }) => {
@@ -42,47 +46,45 @@ export const getChapters = createAsyncThunk(
   { condition: (_, { getState }) => getState().chapters.chapters.length === 0 },
 );
 
-// One surah: the Arabic text comes with the app, the English translation is
-// downloaded. Without a connection the surah still opens, Arabic only.
+// The Arabic text of one surah; it comes with the app.
 export const getSurah = createAsyncThunk(
   'chapters/getSurah',
   async (number, { rejectWithValue }) => {
     if (!Number.isInteger(number) || number < 1 || number > surahList.length) {
       return rejectWithValue('There is no surah with that number.');
     }
-    let arabic;
     try {
-      arabic = (await import(`../../data/quran/${number}.json`)).default;
+      const arabic = (await import(`../../data/quran/${number}.json`)).default;
+      return {
+        number,
+        ayahs: arabic.map((text, index) => ({ numberInSurah: index + 1, text })),
+      };
     } catch (error) {
       return rejectWithValue(describeError(error));
     }
-    let english = null;
+  },
+  { condition: (number, { getState }) => !getState().chapters.surahs[number] },
+);
+
+// One translation of one surah, downloaded when the reader asks for it.
+export const getTranslation = createAsyncThunk(
+  'chapters/getTranslation',
+  async ({ edition, surah }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API}/surah/${number}/${TRANSLATION_EDITION}`);
-      english = response.data.data;
+      return await loadTranslation(edition, surah);
     } catch (error) {
-      english = null;
+      return rejectWithValue(describeError(error));
     }
-    return {
-      number,
-      name: english?.name,
-      englishName: english?.englishName,
-      englishNameTranslation: english?.englishNameTranslation,
-      translationLoaded: Boolean(english),
-      ayahs: arabic.map((text, index) => ({
-        numberInSurah: index + 1,
-        text,
-        translation: english?.ayahs[index]?.text || '',
-      })),
-    };
   },
   {
-    condition: (number, { getState }) => {
-      const surah = getState().chapters.surahs[number];
-      return !surah || !surah.translationLoaded;
+    condition: ({ edition, surah }, { getState }) => {
+      const entry = getState().chapters.translations[translationKey(edition, surah)];
+      return !entry || entry.status === 'error';
     },
   },
 );
+
+const keyOf = (action) => translationKey(action.meta.arg.edition, action.meta.arg.surah);
 
 export const chaptersSlice = createSlice({
   name: 'chapters',
@@ -113,7 +115,16 @@ export const chaptersSlice = createSlice({
         ...state,
         surahLoading: false,
         surahError: action.payload,
-      }));
+      }))
+      .addCase(getTranslation.pending, (state, action) => {
+        state.translations[keyOf(action)] = { status: 'loading', texts: [] };
+      })
+      .addCase(getTranslation.fulfilled, (state, action) => {
+        state.translations[keyOf(action)] = { status: 'ready', texts: action.payload };
+      })
+      .addCase(getTranslation.rejected, (state, action) => {
+        state.translations[keyOf(action)] = { status: 'error', texts: [], error: action.payload };
+      });
   },
 });
 

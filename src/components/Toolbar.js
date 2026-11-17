@@ -163,6 +163,7 @@ function Toolbar({
       <p className="save-status" role="status" aria-live="polite">
         {mode === 'draw' && tool !== 'select' ? 'Two fingers to scroll · ' : ''}
         {mode === 'highlight' ? 'Tap or drag across words · ' : ''}
+        {mode === 'read' ? 'Tap an ayah number for tafsir · ' : ''}
         {status}
       </p>
     </div>

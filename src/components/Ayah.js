@@ -72,15 +72,26 @@ function Ayah({
         <Words words={arabic} text="ar" covers={arabicCovers} drag={drag} />
         {/* A non-breaking space: the ayah sign never starts a line on its own. */}
         {'\u00A0'}
-        <span className="ayah-ending" aria-label={`Ayah ${ayah.numberInSurah}`}>
+        <span
+          className="ayah-ending"
+          role="button"
+          tabIndex={0}
+          data-tafsir
+          aria-label={`Ayah ${ayah.numberInSurah}, open tafsir`}
+        >
           {arabicNumber(ayah.numberInSurah)}
         </span>
         {' '}
       </p>
-      {showTranslation && (
+      {showTranslation && english.length > 0 && (
         <p className="ayah english-ayah" dir="ltr" lang="en">
           <Words words={english} text="en" covers={englishCovers} drag={drag} />
         </p>
+      )}
+      {showTranslation && (
+        <button type="button" className="tafsir-link" data-tafsir>
+          {`Tafsir of ayah ${ayah.numberInSurah}`}
+        </button>
       )}
     </div>
   );

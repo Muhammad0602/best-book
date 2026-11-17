@@ -2,26 +2,30 @@ import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { BiChevronLeft, BiChevronRight } from 'react-icons/bi';
 import {
-  getChapters, getSurah, TRANSLATION_EDITION, ARABIC_EDITION,
+  getSurah, getTranslation, translationKey, ARABIC_EDITION,
 } from '../redux/chapters/chaptersSlice';
 import { changeApplied, historyCleared, migrated } from '../redux/annotations/annotationsSlice';
 import { isLegacy, migrate } from '../lib/legacy';
+import { DEFAULT_TRANSLATION, FIRST_TRANSLATION, TRANSLATIONS } from '../lib/sources';
 import fatiha from '../data/quran/1.json';
+import pageMap from '../data/pages.json';
 import { newId } from '../lib/geometry';
 import { readPref, writePref } from '../lib/prefs';
 import Ayah from './Ayah';
 import DrawingLayer from './DrawingLayer';
 import Toolbar, { HIGHLIGHT_COLORS, PEN_COLORS, PEN_WIDTHS } from './Toolbar';
 import { HighlightSheet, MarksSheet } from './Sheets';
+import TafsirPanel from './TafsirPanel';
 
 const NONE = [];
 const [BISMILLAH] = fatiha;
 const SCALES = [0.85, 1, 1.15, 1.3, 1.5];
 const DEFAULT_SCALE = 1;
 const BAR_HEIGHT = 76; // the top bar, plus a little air
+const SWIPE_DISTANCE = 70;
 const TRANSLATION_KEY = 'bestbook.showTranslation';
 
 // The translation is hidden until the reader switches it on; the choice is
@@ -49,19 +53,22 @@ const wordAt = (x, y) => {
 
 function Details() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { number } = useParams();
   const [params] = useSearchParams();
   const resumeAyah = Number(params.get('ayah')) || 0;
+  const startAtEnd = params.get('page') === 'last';
   const id = parseInt(number, 10);
   const {
-    chapters, surahs, surahLoading, surahError,
+    chapters, surahs, translations, surahLoading, surahError,
   } = useSelector((store) => store.chapters);
   const items = useSelector((store) => store.annotations.items);
   const surah = surahs[id];
-  const info = chapters[id - 1] || surah;
+  const info = chapters[id - 1];
 
   const articleRef = useRef(null);
   const dragRef = useRef(null);
+  const swipeRef = useRef(null);
   const [mode, setMode] = useState('read');
   const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_COLORS[0]);
   const [tool, setTool] = useState('pen');
@@ -70,12 +77,68 @@ function Details() {
   const [selectedId, setSelectedId] = useState(null);
   const [drag, setDrag] = useState(null);
   const [sheet, setSheet] = useState(null); // { ayah, text, word } | 'list'
+  const [tafsirAyah, setTafsirAyah] = useState(null);
+  const [view, setView] = useState({ index: 0, turn: '' });
   const [showTranslation, setShowTranslation] = useState(readShowTranslation);
+  const [edition, setEdition] = useState(() => {
+    const saved = readPref('translation', DEFAULT_TRANSLATION);
+    return TRANSLATIONS.some((item) => item.id === saved) ? saved : DEFAULT_TRANSLATION;
+  });
   const [scaleIndex, setScaleIndex] = useState(() => {
     const saved = readPref('textScale', DEFAULT_SCALE);
     return SCALES.includes(saved) ? SCALES.indexOf(saved) : DEFAULT_SCALE;
   });
   const loaded = Boolean(surah);
+  const translation = translations[translationKey(edition, id)];
+
+  // The pages of the Madinah mushaf that this surah covers.
+  const total = surah ? surah.ayahs.length : 0;
+  const pages = useMemo(() => {
+    const runs = pageMap[id - 1] || NONE;
+    return runs.map(([page, first], index) => ({
+      page,
+      first,
+      last: index + 1 < runs.length ? runs[index + 1][1] - 1 : total,
+    }));
+  }, [id, total]);
+  const pageIndex = Math.min(view.index, Math.max(0, pages.length - 1));
+  const current = pages[pageIndex];
+  const pageOf = useCallback((ayah) => Math.max(
+    0,
+    pages.findIndex((page) => ayah >= page.first && ayah <= page.last),
+  ), [pages]);
+
+  const ayahs = useMemo(() => {
+    if (!surah) return NONE;
+    const texts = translation ? translation.texts : NONE;
+    return surah.ayahs.map((ayah, index) => ({ ...ayah, translation: texts[index] || '' }));
+  }, [surah, translation]);
+  const pageAyahs = useMemo(
+    () => (current ? ayahs.slice(current.first - 1, current.last) : NONE),
+    [ayahs, current],
+  );
+
+  useEffect(() => {
+    dispatch(getSurah(id));
+    dispatch(historyCleared());
+    setTafsirAyah(null);
+    setSheet(null);
+    window.scrollTo(0, 0);
+  }, [dispatch, id]);
+
+  // Which page to open on: the first, the one with the ayah to continue
+  // from, or the last when coming back from the next surah.
+  useEffect(() => {
+    if (!loaded) return;
+    let index = 0;
+    if (resumeAyah > 1) index = pageOf(resumeAyah);
+    else if (startAtEnd) index = Math.max(0, pages.length - 1);
+    setView({ index, turn: '' });
+  }, [loaded, id, resumeAyah, startAtEnd, pageOf, pages.length]);
+
+  useEffect(() => {
+    if (showTranslation && loaded) dispatch(getTranslation({ edition, surah: id }));
+  }, [showTranslation, loaded, edition, id, dispatch]);
 
   const changeScale = (step) => {
     const next = Math.min(SCALES.length - 1, Math.max(0, scaleIndex + step));
@@ -93,7 +156,7 @@ function Details() {
       window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - BAR_HEIGHT);
     };
     const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    fonts.then(() => setTimeout(go, 50));
+    fonts.then(() => setTimeout(go, 80));
     return () => { cancelled = true; };
   }, [loaded, resumeAyah, id]);
 
@@ -104,14 +167,12 @@ function Details() {
     const save = () => {
       timer = null;
       const blocks = articleRef.current ? articleRef.current.querySelectorAll('[data-ayah]') : [];
-      let ayah = 1;
       for (let i = 0; i < blocks.length; i += 1) {
         if (blocks[i].getBoundingClientRect().bottom > BAR_HEIGHT) {
-          ayah = Number(blocks[i].dataset.ayah);
-          break;
+          writePref('lastRead', { surah: id, ayah: Number(blocks[i].dataset.ayah) });
+          return;
         }
       }
-      writePref('lastRead', { surah: id, ayah });
     };
     const onScroll = () => { if (!timer) timer = setTimeout(save, 400); };
     const last = readPref('lastRead', null);
@@ -126,7 +187,6 @@ function Details() {
   const toggleTranslation = () => {
     const next = !showTranslation;
     setShowTranslation(next);
-    if (next && surah && !surah.translationLoaded) dispatch(getSurah(id));
     try {
       window.localStorage.setItem(TRANSLATION_KEY, next ? '1' : '0');
     } catch (error) {
@@ -134,12 +194,79 @@ function Details() {
     }
   };
 
+  const chooseEdition = (event) => {
+    setEdition(event.target.value);
+    writePref('translation', event.target.value);
+    setSheet(null);
+    setSelectedId(null);
+  };
+
+  // Put the top of the page just under the top bar.
+  const scrollToPageTop = () => setTimeout(() => {
+    const article = articleRef.current;
+    if (!article) return;
+    const top = article.getBoundingClientRect().top + window.scrollY - BAR_HEIGHT;
+    window.scrollTo(0, Math.max(0, top));
+  }, 0);
+
+  const hasNext = pageIndex < pages.length - 1 || id < chapters.length;
+  const hasPrevious = pageIndex > 0 || id > 1;
+
+  // Turn the page; past the ends of the surah, go to the surah after or before.
+  const turnPage = useCallback((step) => {
+    const next = pageIndex + step;
+    setSelectedId(null);
+    setSheet(null);
+    if (next < 0) {
+      if (id > 1) navigate(`/Details/${id - 1}?page=last`);
+      return;
+    }
+    if (next >= pages.length) {
+      if (id < chapters.length) navigate(`/Details/${id + 1}`);
+      return;
+    }
+    setView({ index: next, turn: step > 0 ? 'next' : 'previous' });
+    writePref('lastRead', { surah: id, ayah: pages[next].first });
+    scrollToPageTop();
+  }, [pageIndex, pages, id, chapters.length, navigate]);
+
+  // Left and right arrow keys turn the page, in the direction of the mushaf.
   useEffect(() => {
-    dispatch(getChapters());
-    dispatch(getSurah(id));
-    dispatch(historyCleared());
-    window.scrollTo(0, 0);
-  }, [dispatch, id]);
+    if (!loaded || tafsirAyah) return undefined;
+    const onKey = (event) => {
+      const tag = event.target && event.target.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'ArrowLeft') turnPage(1);
+      if (event.key === 'ArrowRight') turnPage(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [loaded, tafsirAyah, turnPage]);
+
+  // Read mode: a sideways swipe turns the page (swipe right for the next one,
+  // as when turning the pages of a mushaf).
+  const onTouchStart = (event) => {
+    swipeRef.current = null;
+    if (mode !== 'read' || event.touches.length !== 1) return;
+    if (event.target.closest && event.target.closest('.sheet, .toolbar, .tafsir-backdrop, select')) return;
+    const touch = event.touches[0];
+    swipeRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  };
+
+  const onTouchEnd = (event) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start || event.changedTouches.length === 0) return;
+    const selection = window.getSelection ? window.getSelection() : null;
+    if (selection && !selection.isCollapsed) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Date.now() - start.time > 700) return;
+    if (Math.abs(dx) < SWIPE_DISTANCE || Math.abs(dx) < Math.abs(dy) * 2.5) return;
+    turnPage(dx > 0 ? 1 : -1);
+  };
 
   // This surah's marks, oldest first.
   const annotations = useMemo(
@@ -148,9 +275,14 @@ function Details() {
       .sort((a, b) => a.ayah - b.ayah || a.createdAt.localeCompare(b.createdAt)),
     [items, id],
   );
+  // Marks on a translation only fit the words of that translation.
+  const visibleMarks = useMemo(() => annotations.filter(({ type, data }) => {
+    if (type === 'highlight') return data.text !== 'en' || data.edition === edition;
+    return data.anchor?.text !== 'en' || (data.edition || FIRST_TRANSLATION) === edition;
+  }), [annotations, edition]);
   const drawings = useMemo(
-    () => annotations.filter((annotation) => annotation.type === 'drawing'),
-    [annotations],
+    () => visibleMarks.filter((annotation) => annotation.type === 'drawing'),
+    [visibleMarks],
   );
 
   // Marks made on the earlier edition of the Arabic text are moved onto the
@@ -164,15 +296,16 @@ function Details() {
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [annotations, dispatch]);
+
   const highlightsByAyah = useMemo(() => {
     const map = {};
-    annotations.forEach((annotation) => {
+    visibleMarks.forEach((annotation) => {
       if (annotation.type !== 'highlight') return;
       if (!map[annotation.ayah]) map[annotation.ayah] = [];
       map[annotation.ayah].push(annotation);
     });
     return map;
-  }, [annotations]);
+  }, [visibleMarks]);
 
   const covering = useCallback((spot) => (highlightsByAyah[spot.ayah] || NONE).filter(
     ({ data }) => data.text === spot.text && data.start <= spot.word && data.end >= spot.word,
@@ -228,7 +361,7 @@ function Details() {
         type: 'highlight',
         data: {
           text,
-          edition: text === 'ar' ? ARABIC_EDITION : TRANSLATION_EDITION,
+          edition: text === 'ar' ? ARABIC_EDITION : edition,
           start,
           end,
           color: highlightColor,
@@ -256,25 +389,25 @@ function Details() {
   };
 
   const onPointerMove = (event) => {
-    const { current } = dragRef;
-    if (!current || current.pointerId !== event.pointerId) return;
+    const { current: active } = dragRef;
+    if (!active || active.pointerId !== event.pointerId) return;
     const spot = wordAt(event.clientX, event.clientY);
-    if (!spot || spot.ayah !== current.ayah || spot.text !== current.text) return;
-    if (spot.word === current.to) return;
-    current.to = spot.word;
-    current.moved = true;
-    setDrag({ ...current, color: highlightColor });
+    if (!spot || spot.ayah !== active.ayah || spot.text !== active.text) return;
+    if (spot.word === active.to) return;
+    active.to = spot.word;
+    active.moved = true;
+    setDrag({ ...active, color: highlightColor });
   };
 
   const onPointerUp = (event) => {
-    const { current } = dragRef;
-    if (!current || current.pointerId !== event.pointerId) return;
+    const { current: active } = dragRef;
+    if (!active || active.pointerId !== event.pointerId) return;
     dragRef.current = null;
     setDrag(null);
-    if (!current.moved && covering(current).length > 0) {
-      setSheet({ ayah: current.ayah, text: current.text, word: current.word });
+    if (!active.moved && covering(active).length > 0) {
+      setSheet({ ayah: active.ayah, text: active.text, word: active.word });
     } else {
-      addHighlight(current);
+      addHighlight(active);
     }
   };
 
@@ -283,31 +416,59 @@ function Details() {
     setDrag(null);
   };
 
-  // Read mode: tapping highlighted words opens the "remove" sheet.
-  const onClick = (event) => {
-    if (mode !== 'read') return;
-    const word = event.target.closest ? event.target.closest('.w.hl') : null;
-    const block = word ? word.closest('[data-ayah]') : null;
+  // Read mode: tapping an ayah number opens its tafsir, tapping highlighted
+  // words opens the "remove" sheet.
+  const activate = (target) => {
+    if (mode !== 'read' || !target.closest) return false;
+    const block = target.closest('[data-ayah]');
+    if (!block) return false;
+    if (target.closest('[data-tafsir]')) {
+      setSheet(null);
+      setTafsirAyah(Number(block.dataset.ayah));
+      return true;
+    }
+    const word = target.closest('.w.hl');
     const selection = window.getSelection ? window.getSelection() : null;
-    if (!block || (selection && !selection.isCollapsed)) return;
+    if (!word || (selection && !selection.isCollapsed)) return false;
     setSheet({
       ayah: Number(block.dataset.ayah),
       text: word.dataset.t,
       word: Number(word.dataset.w),
     });
+    return true;
   };
 
+  const onClick = (event) => { activate(event.target); };
+
+  const onKeyDown = (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    if (event.target.tagName === 'BUTTON') return;
+    if (activate(event.target)) event.preventDefault();
+  };
+
+  // Show an ayah, turning to its page first when needed.
   const goTo = (annotation) => {
     setSheet(null);
-    const element = document.getElementById(`ayah-${annotation.ayah}`);
-    if (!element) return;
-    element.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    element.classList.add('flash');
-    setTimeout(() => element.classList.remove('flash'), 1600);
+    const index = pageOf(annotation.ayah);
+    if (index !== pageIndex) setView({ index, turn: index > pageIndex ? 'next' : 'previous' });
+    setTimeout(() => {
+      const element = document.getElementById(`ayah-${annotation.ayah}`);
+      if (!element) return;
+      element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      element.classList.add('flash');
+      setTimeout(() => element.classList.remove('flash'), 1600);
+    }, 80);
   };
 
+  let nextLabel = '';
+  if (pageIndex < pages.length - 1) nextLabel = 'Next page';
+  else if (id < chapters.length) nextLabel = chapters[id].englishName;
+  let previousLabel = '';
+  if (pageIndex > 0) previousLabel = 'Previous page';
+  else if (id > 1) previousLabel = chapters[id - 2].englishName;
+
   return (
-    <div className="details">
+    <div className="details" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {info && (
         <div className="surah-head">
           <h2 className="surah-title" lang="ar" dir="rtl">{info.name}</h2>
@@ -352,31 +513,55 @@ function Details() {
         </div>
       )}
 
-      {surah && (
-        // The handlers below only pick up taps on words; every action is
-        // also reachable through the buttons of the "Marks" list.
-        // eslint-disable-next-line max-len
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+      {surah && showTranslation && (
+        <div className="translation-bar">
+          <label htmlFor="translation-choice">
+            <span>Translation</span>
+            <select id="translation-choice" value={edition} onChange={chooseEdition}>
+              {TRANSLATIONS.map((item) => (
+                <option key={item.id} value={item.id}>{`${item.name} · ${item.author}`}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {surah && current && (
+        // The handlers below only pick up taps on words and ayah numbers;
+        // marks are also reachable through the buttons of the "Marks" list.
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <article
+          key={`${id}:${pageIndex}`}
           ref={articleRef}
-          className={`ayahs mode-${mode}${showTranslation ? '' : ' flow'}`}
+          className={`ayahs mode-${mode}${showTranslation ? '' : ' flow'}${view.turn ? ` turn-${view.turn}` : ''}`}
           style={{ '--scale': SCALES[scaleIndex] }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           onClick={onClick}
+          onKeyDown={onKeyDown}
         >
-          {id !== 1 && id !== 9 && (
+          {pageIndex === 0 && id !== 1 && id !== 9 && (
             <p className="bismillah" dir="rtl" lang="ar">{BISMILLAH}</p>
           )}
-          {showTranslation && !surah.translationLoaded && (
+          {showTranslation && translation && translation.status === 'loading' && (
+            <p className="reader-note" dir="ltr">Loading the translation…</p>
+          )}
+          {showTranslation && translation && translation.status === 'error' && (
             <p className="reader-note" dir="ltr">
-              The translation could not be loaded. Check your connection and
-              tap Translation again.
+              The translation could not be loaded. Check your connection.
+              {' '}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => dispatch(getTranslation({ edition, surah: id }))}
+              >
+                Try again
+              </button>
             </p>
           )}
-          {surah.ayahs.map((ayah) => (
+          {pageAyahs.map((ayah) => (
             <Ayah
               key={ayah.numberInSurah}
               ayah={ayah}
@@ -395,32 +580,44 @@ function Details() {
             width={penWidth}
             selectedId={selectedId}
             onSelect={setSelectedId}
-            layoutKey={`${showTranslation ? 'blocks' : 'flow'}-${scaleIndex}`}
+            translationEdition={edition}
+            layoutKey={`${showTranslation ? `blocks-${translation ? translation.status : ''}` : 'flow'}-${scaleIndex}`}
           />
         </article>
       )}
 
-      {surah && (
-        <nav className="surah-nav" aria-label="Previous and next surah">
-          {id > 1 ? (
-            <Link to={`/Details/${id - 1}`} className="nav-link">
-              <BiChevronLeft aria-hidden="true" />
-              <span>{chapters[id - 2].englishName}</span>
-            </Link>
-          ) : <span />}
-          {id < chapters.length ? (
-            <Link to={`/Details/${id + 1}`} className="nav-link">
-              <span>{chapters[id].englishName}</span>
-              <BiChevronRight aria-hidden="true" />
-            </Link>
-          ) : <span />}
+      {surah && current && (
+        <nav className="pager" aria-label="Pages">
+          <button
+            type="button"
+            className="nav-link"
+            disabled={!hasNext}
+            onClick={() => turnPage(1)}
+          >
+            <BiChevronLeft aria-hidden="true" />
+            <span>{nextLabel}</span>
+          </button>
+          <p className="pager-info">
+            {pages.length > 1 && <strong>{`Page ${pageIndex + 1} of ${pages.length}`}</strong>}
+            <span>{`Mushaf page ${current.page}`}</span>
+          </p>
+          <button
+            type="button"
+            className="nav-link"
+            disabled={!hasPrevious}
+            onClick={() => turnPage(-1)}
+          >
+            <span>{previousLabel}</span>
+            <BiChevronRight aria-hidden="true" />
+          </button>
         </nav>
       )}
 
       {surah && sheet === 'list' && (
         <MarksSheet
           annotations={annotations}
-          ayahs={surah.ayahs}
+          ayahs={ayahs}
+          edition={edition}
           onGo={goTo}
           onRemove={remove}
           onClose={() => setSheet(null)}
@@ -429,10 +626,21 @@ function Details() {
       {surah && sheet && sheet !== 'list' && sheetHighlights.length > 0 && (
         <HighlightSheet
           highlights={sheetHighlights}
-          ayah={surah.ayahs[sheet.ayah - 1]}
+          ayah={ayahs[sheet.ayah - 1]}
           onRemove={remove}
           onColor={recolor}
           onClose={() => setSheet(null)}
+        />
+      )}
+
+      {surah && tafsirAyah && (
+        <TafsirPanel
+          surah={id}
+          ayah={tafsirAyah}
+          ayahText={surah.ayahs[tafsirAyah - 1].text}
+          total={total}
+          onAyah={setTafsirAyah}
+          onClose={() => setTafsirAyah(null)}
         />
       )}
 

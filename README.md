@@ -110,7 +110,9 @@ npm test
 ## ✏️ Study features <a name="study-features"></a>
 
 - **Madinah-style page** – the Arabic text uses the King Fahd Complex *Uthmanic Hafs* font and its matching text (bundled in `src/data/quran`, built with `node scripts/build-quran-text.js`), and the ayahs follow one another like on a page of the mushaf. The whole Arabic text works offline.
-- **Translation switch** – the English translation is off by default; the *Translation* button shows it under each ayah.
+- **Mushaf pages** – long surahs are split into the pages of the Madinah mushaf. Turn pages with the buttons, the arrow keys or a sideways swipe.
+- **Translations** – off by default; the *Translation* button shows the translation under each ayah. Choose between *The Clear Quran* (Dr. Mustafa Khattab), *Saheeh International* and Muhammad Asad. They are downloaded on demand (jsDelivr `fawazahmed0/quran-api`, quran.com, alquran.cloud); check each publisher's terms before distributing the app widely.
+- **Tafsir** – tap an ayah number to read the Arabic commentary of Ibn Kathir, al-Tabari, al-Qurtubi, al-Baghawi, al-Sa'di, al-Wasit or al-Muyassar (from the quran.com API).
 
 - **Highlights** – choose *Highlight*, then tap a word or drag across words (Arabic or translation). Tap a highlight later to change its colour or remove it; overlapping highlights are removed one at a time.
 - **Drawings** – choose *Draw* to mark the text freehand (X, circle, underline, arrow). Pen, eraser, select-and-delete, undo/redo, colours and thickness. Two fingers scroll while drawing.

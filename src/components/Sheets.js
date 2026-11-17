@@ -3,10 +3,23 @@ import PropTypes from 'prop-types';
 import { BiTrash, BiX } from 'react-icons/bi';
 import { splitWords } from '../lib/geometry';
 import { HIGHLIGHT_COLORS } from './Toolbar';
+import { FIRST_TRANSLATION } from '../lib/sources';
 
 const textOf = (ayah, kind) => (kind === 'ar' ? ayah?.text : ayah?.translation);
 
-export const describe = (annotation, ayah) => {
+// The translation a mark was made on, or null for marks on the Arabic.
+const translationOf = ({ type, data }) => {
+  if (type === 'highlight') return data.text === 'en' ? data.edition : null;
+  return data.anchor?.text === 'en' ? data.edition || FIRST_TRANSLATION : null;
+};
+
+export const describe = (annotation, ayah, edition) => {
+  const madeOn = translationOf(annotation);
+  if (madeOn && edition && madeOn !== edition) {
+    return annotation.type === 'highlight'
+      ? 'Highlight on another translation'
+      : 'Drawing on another translation';
+  }
   if (annotation.type === 'highlight') {
     const { text, start, end } = annotation.data;
     return splitWords(textOf(ayah, text)).slice(start, end + 1).join(' ');
@@ -77,7 +90,7 @@ HighlightSheet.defaultProps = { ayah: null };
 
 // Every mark in the current surah, with "go to" and "delete".
 export function MarksSheet({
-  annotations, ayahs, onGo, onRemove, onClose,
+  annotations, ayahs, edition, onGo, onRemove, onClose,
 }) {
   return (
     <div className="sheet sheet-tall" role="dialog" aria-label="Marks in this surah">
@@ -100,7 +113,7 @@ export function MarksSheet({
               className={`sheet-text${annotation.type === 'highlight' ? ` hl hl-${annotation.data.color}` : ''}`}
               dir="auto"
             >
-              {describe(annotation, ayahs[annotation.ayah - 1])}
+              {describe(annotation, ayahs[annotation.ayah - 1], edition)}
             </span>
           </button>
           <button
@@ -120,6 +133,7 @@ export function MarksSheet({
 MarksSheet.propTypes = {
   annotations: PropTypes.arrayOf(annotationShape).isRequired,
   ayahs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  edition: PropTypes.string.isRequired,
   onGo: PropTypes.func.isRequired,
   onRemove: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,

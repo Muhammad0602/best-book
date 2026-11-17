@@ -17,12 +17,13 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Quran text: answer from the saved copy straight away and refresh it in the
 // background, so surahs that were opened before can be read offline.
 registerRoute(
-  ({ url }) => url.origin === 'https://api.alquran.cloud',
+  ({ url }) => ['https://api.alquran.cloud', 'https://api.quran.com', 'https://cdn.jsdelivr.net']
+    .includes(url.origin),
   new StaleWhileRevalidate({
     cacheName: 'quran-text',
     plugins: [
       new CacheableResponsePlugin({ statuses: [200] }),
-      new ExpirationPlugin({ maxEntries: 200 }),
+      new ExpirationPlugin({ maxEntries: 800 }),
     ],
   }),
 );
