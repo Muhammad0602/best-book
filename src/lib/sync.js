@@ -3,6 +3,7 @@ import {
   GUEST, ownerLoaded, remoteMerged, outboxFlushed, syncStatusSet,
 } from '../redux/annotations/annotationsSlice';
 import { userSet, recoverySet } from '../redux/auth/authSlice';
+import { mergeAccountSettings } from './settingsSync';
 
 /*
   Local-first storage for annotations.
@@ -201,6 +202,7 @@ const handleSession = (session) => {
   if (current.ready && (current.user?.id || null) === (user?.id || null)) return;
   store.dispatch(userSet(user));
   switchOwner(user ? user.id : null);
+  if (user) mergeAccountSettings(session.user.user_metadata);
 };
 
 export const startSync = (appStore) => {

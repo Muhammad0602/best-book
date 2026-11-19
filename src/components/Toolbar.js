@@ -35,14 +35,15 @@ const TOOLS = [
 function Toolbar({
   mode, onMode, highlightColor, onHighlightColor, tool, onTool, penColor, onPenColor,
   penWidth, onPenWidth, canDelete, onDelete, count, onOpenList,
-  showTranslation, onToggleTranslation,
+  showTranslation, onToggleTranslation, player, hidden,
 }) {
   const dispatch = useDispatch();
   const { undo, redo, sync } = useSelector((store) => store.annotations);
   const status = STATUS[sync] || '';
 
   return (
-    <div className="toolbar" role="toolbar" aria-label="Study tools">
+    <div className={`toolbar${hidden ? ' toolbar-hidden' : ''}`} role="toolbar" aria-label="Study tools">
+      {player}
       {mode !== 'read' && (
         <div className="toolbar-row toolbar-tools">
           {mode === 'highlight' && HIGHLIGHT_COLORS.map((name) => (
@@ -160,12 +161,14 @@ function Toolbar({
           <span>{`Marks${count ? ` (${count})` : ''}`}</span>
         </button>
       </div>
-      <p className="save-status" role="status" aria-live="polite">
-        {mode === 'draw' && tool !== 'select' ? 'Two fingers to scroll · ' : ''}
-        {mode === 'highlight' ? 'Tap or drag across words · ' : ''}
-        {mode === 'read' ? 'Tap an ayah number for tafsir · ' : ''}
-        {status}
-      </p>
+      {/* While reading, only problems with saving are worth the space. */}
+      {(mode !== 'read' || ['saving', 'offline', 'error'].includes(sync)) && (
+        <p className="save-status" role="status" aria-live="polite">
+          {mode === 'draw' && tool !== 'select' ? 'Two fingers to scroll · ' : ''}
+          {mode === 'highlight' ? 'Tap or drag across words · ' : ''}
+          {status}
+        </p>
+      )}
     </div>
   );
 }
@@ -187,6 +190,10 @@ Toolbar.propTypes = {
   onOpenList: PropTypes.func.isRequired,
   showTranslation: PropTypes.bool.isRequired,
   onToggleTranslation: PropTypes.func.isRequired,
+  player: PropTypes.node,
+  hidden: PropTypes.bool,
 };
+
+Toolbar.defaultProps = { player: null, hidden: false };
 
 export default Toolbar;

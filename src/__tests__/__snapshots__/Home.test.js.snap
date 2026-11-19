@@ -9,10 +9,12 @@ Array [
       The Noble Quran
     </h1>
     <p>
-      114 surahs · read, highlight and take notes
+      114 surahs · read, listen, highlight and take notes
     </p>
-    <div
+    <form
       className="search-container"
+      onSubmit={[Function]}
+      role="search"
     >
       <svg
         aria-hidden="true"
@@ -40,12 +42,21 @@ Array [
       <input
         aria-label="Search a surah"
         className="search-input"
+        enterKeyHint="search"
+        inputMode="search"
         onChange={[Function]}
-        placeholder="Search by name or number"
-        type="search"
+        placeholder="Surah name, number or 2:255"
+        type="text"
         value=""
       />
-    </div>
+    </form>
+    <a
+      className="hero-link"
+      href="/search"
+      onClick={[Function]}
+    >
+      Go to a page, juz or ayah · search the Quran
+    </a>
   </div>,
   <div
     className="home-body"

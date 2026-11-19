@@ -42,6 +42,39 @@ export const loadTranslation = async (edition, surah) => {
   return data.data.ayahs.map((ayah) => plain(ayah.text));
 };
 
+const wholeCache = new Map();
+
+// The whole of one translation, for searching: one list of ayahs per surah.
+export const loadWholeTranslation = (edition, counts) => {
+  if (wholeCache.has(edition)) return wholeCache.get(edition);
+  const split = (flat) => {
+    const out = [];
+    let at = 0;
+    counts.forEach((count) => {
+      out.push(flat.slice(at, at + count));
+      at += count;
+    });
+    return out;
+  };
+  let request;
+  if (edition === 'en.khattab') {
+    request = axios.get(`${JSDELIVR}/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba.json`)
+      .then(({ data }) => split(data.quran.map((verse) => plain(verse.text))));
+  } else if (edition === 'en.sahih') {
+    request = axios.get(`${QURAN_COM}/quran/translations/20`)
+      .then(({ data }) => split(data.translations.map((verse) => plain(verse.text))));
+  } else {
+    request = axios.get(`${ALQURAN_CLOUD}/quran/en.asad`)
+      .then(({ data }) => data.data.surahs.map((surah) => surah.ayahs.map((a) => plain(a.text))));
+  }
+  const promise = request.catch((error) => {
+    wholeCache.delete(edition);
+    throw error;
+  });
+  wholeCache.set(edition, promise);
+  return promise;
+};
+
 export const TAFSIRS = [
   {
     id: 14, slug: 'ar-tafsir-ibn-kathir', name: 'ابن كثير', english: 'Ibn Kathir',

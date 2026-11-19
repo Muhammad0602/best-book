@@ -8,8 +8,10 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import store from './redux/store';
 import { startSync } from './lib/sync';
+import { startSettings } from './lib/settingsSync';
 import registerServiceWorker from './serviceWorkerRegistration';
 
+startSettings(store);
 startSync(store);
 
 // Hash based routes ("#/Details/2") keep working when the app is hosted in a

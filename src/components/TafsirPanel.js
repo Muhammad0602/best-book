@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { BiX, BiChevronLeft, BiChevronRight } from 'react-icons/bi';
+import { useDispatch, useSelector } from 'react-redux';
 import { DEFAULT_TAFSIR, TAFSIRS, loadTafsir } from '../lib/sources';
-import { readPref, writePref } from '../lib/prefs';
+import { setSetting } from '../redux/settings/settingsSlice';
 
 // The commentary of a chosen mufassir on one ayah.
 function TafsirPanel({
   surah, ayah, ayahText, total, onAyah, onClose,
 }) {
-  const [tafsirId, setTafsirId] = useState(() => {
-    const saved = readPref('tafsir', DEFAULT_TAFSIR);
-    return TAFSIRS.some((item) => item.id === saved) ? saved : DEFAULT_TAFSIR;
-  });
+  const dispatch = useDispatch();
+  const saved = useSelector((store) => store.settings.tafsir);
+  const tafsirId = TAFSIRS.some((item) => item.id === saved) ? saved : DEFAULT_TAFSIR;
   const [state, setState] = useState({ status: 'loading', paragraphs: [] });
   const [attempt, setAttempt] = useState(0);
   const bodyRef = useRef(null);
@@ -38,9 +38,7 @@ function TafsirPanel({
   }, [onClose]);
 
   const choose = (event) => {
-    const next = Number(event.target.value);
-    setTafsirId(next);
-    writePref('tafsir', next);
+    dispatch(setSetting('tafsir', Number(event.target.value)));
   };
 
   return (

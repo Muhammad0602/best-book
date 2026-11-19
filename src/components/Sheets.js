@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { BiTrash, BiX } from 'react-icons/bi';
+import { BsBookmarkFill } from 'react-icons/bs';
 import { splitWords } from '../lib/geometry';
 import { HIGHLIGHT_COLORS } from './Toolbar';
 import { FIRST_TRANSLATION } from '../lib/sources';
@@ -14,6 +15,8 @@ const translationOf = ({ type, data }) => {
 };
 
 export const describe = (annotation, ayah, edition) => {
+  if (annotation.type === 'bookmark') return 'Bookmark';
+  if (annotation.type === 'note') return `Note: ${annotation.data.text}`;
   const madeOn = translationOf(annotation);
   if (madeOn && edition && madeOn !== edition) {
     return annotation.type === 'highlight'
@@ -108,7 +111,10 @@ export function MarksSheet({
       {annotations.map((annotation) => (
         <div className="sheet-item sheet-row" key={annotation.id}>
           <button type="button" className="sheet-go" onClick={() => onGo(annotation)}>
-            <span className="sheet-ayah">{`Ayah ${annotation.ayah}`}</span>
+            <span className="sheet-ayah">
+              {annotation.type === 'bookmark' && <BsBookmarkFill aria-hidden="true" />}
+              {` Ayah ${annotation.ayah}`}
+            </span>
             <span
               className={`sheet-text${annotation.type === 'highlight' ? ` hl hl-${annotation.data.color}` : ''}`}
               dir="auto"

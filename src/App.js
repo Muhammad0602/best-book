@@ -7,6 +7,7 @@ import Home from './components/Home';
 import Details from './components/Details';
 import Header from './components/Header';
 import Account from './components/Account';
+import QuranSearch from './components/QuranSearch';
 
 function App() {
   const recovery = useSelector((store) => store.auth.recovery);
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/Details/:number" element={<Details />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/search" element={<QuranSearch />} />
       </Routes>
     </div>
   );

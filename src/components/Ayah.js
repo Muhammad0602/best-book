@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { BiNote } from 'react-icons/bi';
+import { BsBookmarkFill } from 'react-icons/bs';
 import { splitWords } from '../lib/geometry';
+import { arabicNumber } from '../lib/quran';
 
 // For every word: the highlights that cover it (oldest first).
 const coverage = (count, highlights, text) => {
@@ -16,9 +19,6 @@ const coverage = (count, highlights, text) => {
 };
 
 const topOf = (cover) => (cover ? cover[cover.length - 1] : null);
-
-// The font draws a number written in Arabic digits as the end-of-ayah sign.
-const arabicNumber = (value) => String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[digit]);
 
 function Words({
   words, text, covers, drag,
@@ -53,7 +53,7 @@ function Words({
 }
 
 function Ayah({
-  ayah, highlights, drag, showTranslation,
+  ayah, highlights, drag, showTranslation, playing, bookmarked, noted,
 }) {
   const arabic = useMemo(() => splitWords(ayah.text), [ayah.text]);
   const english = useMemo(() => splitWords(ayah.translation), [ayah.translation]);
@@ -67,31 +67,37 @@ function Ayah({
   );
 
   return (
-    <div className="ayah-block" data-ayah={ayah.numberInSurah} id={`ayah-${ayah.numberInSurah}`}>
+    <div
+      className={`ayah-block${playing ? ' playing' : ''}`}
+      data-ayah={ayah.numberInSurah}
+      id={`ayah-${ayah.numberInSurah}`}
+    >
       <p className="ayah arabic-ayah" dir="rtl" lang="ar">
         <Words words={arabic} text="ar" covers={arabicCovers} drag={drag} />
         {/* A non-breaking space: the ayah sign never starts a line on its own. */}
         {'\u00A0'}
+        {/* The font draws the number in Arabic digits as the end-of-ayah sign. */}
         <span
           className="ayah-ending"
           role="button"
           tabIndex={0}
-          data-tafsir
-          aria-label={`Ayah ${ayah.numberInSurah}, open tafsir`}
+          data-menu
+          aria-label={`Ayah ${ayah.numberInSurah}: play, tafsir, bookmark, note, copy`}
         >
           {arabicNumber(ayah.numberInSurah)}
         </span>
+        {(bookmarked || noted) && (
+          <span className="ayah-flags" data-menu aria-hidden="true">
+            {bookmarked && <BsBookmarkFill />}
+            {noted && <BiNote />}
+          </span>
+        )}
         {' '}
       </p>
       {showTranslation && english.length > 0 && (
         <p className="ayah english-ayah" dir="ltr" lang="en">
           <Words words={english} text="en" covers={englishCovers} drag={drag} />
         </p>
-      )}
-      {showTranslation && (
-        <button type="button" className="tafsir-link" data-tafsir>
-          {`Tafsir of ayah ${ayah.numberInSurah}`}
-        </button>
       )}
     </div>
   );
@@ -105,6 +111,9 @@ Ayah.propTypes = {
   }).isRequired,
   highlights: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   showTranslation: PropTypes.bool,
+  playing: PropTypes.bool,
+  bookmarked: PropTypes.bool,
+  noted: PropTypes.bool,
   drag: PropTypes.shape({
     text: PropTypes.string,
     from: PropTypes.number,
@@ -113,6 +122,8 @@ Ayah.propTypes = {
   }),
 };
 
-Ayah.defaultProps = { drag: null, showTranslation: false };
+Ayah.defaultProps = {
+  drag: null, showTranslation: false, playing: false, bookmarked: false, noted: false,
+};
 
 export default React.memo(Ayah);
