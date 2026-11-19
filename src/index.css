@@ -783,6 +783,13 @@ a {
   margin: 0 0 0.9em;
 }
 
+.tafsir-body.tafsir-english {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  line-height: 1.65;
+  text-align: left;
+}
+
 .tafsir-body .tafsir-ayah {
   padding: 10px 14px;
   font-family: 'UthmanicHafs', serif;

@@ -127,9 +127,16 @@ function SettingsPanel({ onClose }) {
               value={settings.tafsir}
               onChange={(event) => set('tafsir')(Number(event.target.value))}
             >
-              {TAFSIRS.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-              ))}
+              <optgroup label="Arabic">
+                {TAFSIRS.filter((item) => item.lang === 'ar').map((item) => (
+                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
+                ))}
+              </optgroup>
+              <optgroup label="English">
+                {TAFSIRS.filter((item) => item.lang === 'en').map((item) => (
+                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
+                ))}
+              </optgroup>
             </select>
           </label>
         </section>

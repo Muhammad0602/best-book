@@ -116,7 +116,7 @@ npm test
 - **Recitation** – listen ayah by ayah with a choice of ten reciters (audio from cdn.islamic.network); the page turns and the current ayah is lit as it plays.
 - **Search and go to** – search the Arabic text or the chosen translation, or jump to a surah and ayah, a page (1–604) or a juz.
 - **Settings** – the *Aa* button: night mode, text size, translation, tafsir, reciter and page-turn direction. Signed-in readers find their settings and last place on every device.
-- **Tafsir** – tap an ayah number to read the Arabic commentary of Ibn Kathir, al-Tabari, al-Qurtubi, al-Baghawi, al-Sa'di, al-Wasit or al-Muyassar (from the quran.com API).
+- **Tafsir** – from the ayah menu: Arabic (Ibn Kathir, al-Tabari, al-Qurtubi, al-Baghawi, al-Sa'di, al-Wasit, al-Muyassar) and English (Al-Mukhtasar, Ibn Kathir abridged, Ma'arif al-Qur'an, Al-Jalalayn, Asbab al-Nuzul of al-Wahidi). Sources: the quran.com API and the spa5k/tafsir_api collection on GitHub.
 
 - **Highlights** – choose *Highlight*, then tap a word or drag across words (Arabic or translation). Tap a highlight later to change its colour or remove it; overlapping highlights are removed one at a time.
 - **Drawings** – choose *Draw* to mark the text freehand (X, circle, underline, arrow). Pen, eraser, select-and-delete, undo/redo, colours and thickness. Two fingers scroll while drawing.

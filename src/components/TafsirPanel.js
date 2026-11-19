@@ -12,6 +12,7 @@ function TafsirPanel({
   const dispatch = useDispatch();
   const saved = useSelector((store) => store.settings.tafsir);
   const tafsirId = TAFSIRS.some((item) => item.id === saved) ? saved : DEFAULT_TAFSIR;
+  const english = TAFSIRS.find((item) => item.id === tafsirId).lang === 'en';
   const [state, setState] = useState({ status: 'loading', paragraphs: [] });
   const [attempt, setAttempt] = useState(0);
   const bodyRef = useRef(null);
@@ -63,9 +64,16 @@ function TafsirPanel({
           <label htmlFor="tafsir-choice">
             <span className="visually-hidden">Mufassir</span>
             <select id="tafsir-choice" value={tafsirId} onChange={choose}>
-              {TAFSIRS.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-              ))}
+              <optgroup label="Arabic">
+                {TAFSIRS.filter((item) => item.lang === 'ar').map((item) => (
+                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
+                ))}
+              </optgroup>
+              <optgroup label="English">
+                {TAFSIRS.filter((item) => item.lang === 'en').map((item) => (
+                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
+                ))}
+              </optgroup>
             </select>
           </label>
           <div className="tafsir-steps">
@@ -89,8 +97,13 @@ function TafsirPanel({
             </button>
           </div>
         </div>
-        <div className="tafsir-body" ref={bodyRef} dir="rtl" lang="ar">
-          <p className="tafsir-ayah">{ayahText}</p>
+        <div
+          className={`tafsir-body${english ? ' tafsir-english' : ''}`}
+          ref={bodyRef}
+          dir={english ? 'ltr' : 'rtl'}
+          lang={english ? 'en' : 'ar'}
+        >
+          <p className="tafsir-ayah" dir="rtl" lang="ar">{ayahText}</p>
           {state.status === 'loading' && (
             <div className="loading"><div className="spinner small" /></div>
           )}
@@ -104,8 +117,9 @@ function TafsirPanel({
           )}
           {state.status === 'ready' && state.paragraphs.length === 0 && (
             <p className="tafsir-note" dir="ltr" lang="en">
-              This tafsir has no separate commentary on this ayah. Try the ayah
-              before it, or another mufassir.
+              This tafsir has no separate commentary on this ayah: it may explain
+              it together with the ayahs before it. Try the previous ayah, or
+              another tafsir.
             </p>
           )}
           {state.paragraphs.map((paragraph, index) => (

@@ -9,6 +9,7 @@ import axios from 'axios';
 const QURAN_COM = 'https://api.quran.com/api/v4';
 const ALQURAN_CLOUD = 'https://api.alquran.cloud/v1';
 const JSDELIVR = 'https://cdn.jsdelivr.net/gh';
+const GITHUB_TAFSIRS = 'https://raw.githubusercontent.com/spa5k/tafsir_api/main';
 
 export const TRANSLATIONS = [
   { id: 'en.khattab', name: 'The Clear Quran', author: 'Dr. Mustafa Khattab' },
@@ -75,27 +76,47 @@ export const loadWholeTranslation = (edition, counts) => {
   return promise;
 };
 
+/*
+  Tafsirs. `qdc`: served by the quran.com API (with the GitHub copy of the
+  spa5k/tafsir_api collection as a second source); the others come from that
+  collection only.
+*/
 export const TAFSIRS = [
   {
-    id: 14, slug: 'ar-tafsir-ibn-kathir', name: 'ابن كثير', english: 'Ibn Kathir',
+    id: 14, slug: 'ar-tafsir-ibn-kathir', name: 'ابن كثير', english: 'Ibn Kathir', lang: 'ar', qdc: true,
   },
   {
-    id: 15, slug: 'ar-tafsir-al-tabari', name: 'الطبري', english: 'Al-Tabari',
+    id: 15, slug: 'ar-tafsir-al-tabari', name: 'الطبري', english: 'Al-Tabari', lang: 'ar', qdc: true,
   },
   {
-    id: 90, slug: 'ar-tafseer-al-qurtubi', name: 'القرطبي', english: 'Al-Qurtubi',
+    id: 90, slug: 'ar-tafseer-al-qurtubi', name: 'القرطبي', english: 'Al-Qurtubi', lang: 'ar', qdc: true,
   },
   {
-    id: 94, slug: 'ar-tafsir-al-baghawi', name: 'البغوي', english: 'Al-Baghawi',
+    id: 94, slug: 'ar-tafsir-al-baghawi', name: 'البغوي', english: 'Al-Baghawi', lang: 'ar', qdc: true,
   },
   {
-    id: 91, slug: 'ar-tafseer-al-saddi', name: 'السعدي', english: 'Al-Sa\'di',
+    id: 91, slug: 'ar-tafseer-al-saddi', name: 'السعدي', english: 'Al-Sa\'di', lang: 'ar', qdc: true,
   },
   {
-    id: 93, slug: 'ar-tafsir-al-wasit', name: 'الوسيط (طنطاوي)', english: 'Al-Wasit (Tantawi)',
+    id: 93, slug: 'ar-tafsir-al-wasit', name: 'الوسيط (طنطاوي)', english: 'Al-Wasit (Tantawi)', lang: 'ar', qdc: true,
   },
   {
-    id: 16, slug: 'ar-tafsir-muyassar', name: 'الميسر', english: 'Al-Muyassar',
+    id: 16, slug: 'ar-tafsir-muyassar', name: 'الميسر', english: 'Al-Muyassar', lang: 'ar', qdc: true,
+  },
+  {
+    id: 9001, slug: 'en-tafsir-al-mukhtasar', name: 'Al-Mukhtasar', english: 'short and clear', lang: 'en', qdc: false,
+  },
+  {
+    id: 169, slug: 'en-tafisr-ibn-kathir', name: 'Ibn Kathir', english: 'abridged', lang: 'en', qdc: true,
+  },
+  {
+    id: 168, slug: 'en-tafsir-maarif-ul-quran', name: 'Ma\'arif al-Qur\'an', english: 'Mufti Muhammad Shafi', lang: 'en', qdc: true,
+  },
+  {
+    id: 9002, slug: 'en-al-jalalayn', name: 'Al-Jalalayn', english: 'classical, brief', lang: 'en', qdc: false,
+  },
+  {
+    id: 9003, slug: 'en-asbab-al-nuzul-by-al-wahidi', name: 'Asbab al-Nuzul', english: 'al-Wahidi, occasions of revelation', lang: 'en', qdc: false,
   },
 ];
 
@@ -126,16 +147,30 @@ export const loadTafsir = async (tafsirId, surah, ayah) => {
   const key = `${tafsirId}:${surah}:${ayah}`;
   if (tafsirCache.has(key)) return tafsirCache.get(key);
   const tafsir = TAFSIRS.find((item) => item.id === tafsirId) || TAFSIRS[0];
+  const fromCollection = async (base) => {
+    try {
+      const { data } = await axios.get(`${base}/tafsir/${tafsir.slug}/${surah}/${ayah}.json`);
+      return paragraphsOf(data.text);
+    } catch (error) {
+      // No file: this tafsir says nothing separate about this ayah.
+      if (error.response && error.response.status === 404) return [];
+      throw error;
+    }
+  };
   let paragraphs;
-  try {
-    const { data } = await axios.get(`${QURAN_COM}/tafsirs/${tafsir.id}/by_ayah/${surah}:${ayah}`);
-    paragraphs = paragraphsOf(data.tafsir.text);
-  } catch (error) {
-    // Second source, should the first one be unreachable.
-    const { data } = await axios.get(
-      `${JSDELIVR}/spa5k/tafsir_api@main/tafsir/${tafsir.slug}/${surah}/${ayah}.json`,
-    );
-    paragraphs = paragraphsOf(data.text);
+  if (tafsir.qdc) {
+    try {
+      const { data } = await axios.get(`${QURAN_COM}/tafsirs/${tafsir.id}/by_ayah/${surah}:${ayah}`);
+      paragraphs = paragraphsOf(data.tafsir.text);
+    } catch (error) {
+      paragraphs = await fromCollection(GITHUB_TAFSIRS);
+    }
+  } else {
+    try {
+      paragraphs = await fromCollection(GITHUB_TAFSIRS);
+    } catch (error) {
+      paragraphs = await fromCollection(`${JSDELIVR}/spa5k/tafsir_api@main`);
+    }
   }
   tafsirCache.set(key, paragraphs);
   return paragraphs;
