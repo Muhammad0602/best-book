@@ -4,6 +4,7 @@ import { BiX, BiChevronLeft, BiChevronRight } from 'react-icons/bi';
 import { useDispatch, useSelector } from 'react-redux';
 import { DEFAULT_TAFSIR, TAFSIRS, loadTafsir } from '../lib/sources';
 import { setSetting } from '../redux/settings/settingsSlice';
+import GroupedOptions, { tafsirLabel } from './GroupedOptions';
 
 // The commentary of a chosen mufassir on one ayah.
 function TafsirPanel({
@@ -12,7 +13,9 @@ function TafsirPanel({
   const dispatch = useDispatch();
   const saved = useSelector((store) => store.settings.tafsir);
   const tafsirId = TAFSIRS.some((item) => item.id === saved) ? saved : DEFAULT_TAFSIR;
-  const english = TAFSIRS.find((item) => item.id === tafsirId).lang === 'en';
+  const { lang } = TAFSIRS.find((item) => item.id === tafsirId);
+  // Every tafsir not in Arabic is written left to right.
+  const english = lang !== 'ar';
   const [state, setState] = useState({ status: 'loading', paragraphs: [] });
   const [attempt, setAttempt] = useState(0);
   const bodyRef = useRef(null);
@@ -64,16 +67,7 @@ function TafsirPanel({
           <label htmlFor="tafsir-choice">
             <span className="visually-hidden">Mufassir</span>
             <select id="tafsir-choice" value={tafsirId} onChange={choose}>
-              <optgroup label="Arabic">
-                {TAFSIRS.filter((item) => item.lang === 'ar').map((item) => (
-                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-                ))}
-              </optgroup>
-              <optgroup label="English">
-                {TAFSIRS.filter((item) => item.lang === 'en').map((item) => (
-                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-                ))}
-              </optgroup>
+              <GroupedOptions items={TAFSIRS} label={tafsirLabel} />
             </select>
           </label>
           <div className="tafsir-steps">
@@ -101,7 +95,7 @@ function TafsirPanel({
           className={`tafsir-body${english ? ' tafsir-english' : ''}`}
           ref={bodyRef}
           dir={english ? 'ltr' : 'rtl'}
-          lang={english ? 'en' : 'ar'}
+          lang={lang}
         >
           <p className="tafsir-ayah" dir="rtl" lang="ar">{ayahText}</p>
           {state.status === 'loading' && (

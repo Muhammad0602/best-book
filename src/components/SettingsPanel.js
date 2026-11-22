@@ -6,6 +6,7 @@ import {
 } from '../redux/settings/settingsSlice';
 import { TAFSIRS, TRANSLATIONS } from '../lib/sources';
 import Panel from './Panel';
+import GroupedOptions, { tafsirLabel, translationLabel } from './GroupedOptions';
 
 const THEMES = [
   { id: 'auto', label: 'Auto' },
@@ -111,9 +112,7 @@ function SettingsPanel({ onClose }) {
               value={settings.translation}
               onChange={(event) => set('translation')(event.target.value)}
             >
-              {TRANSLATIONS.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.name} · ${item.author}`}</option>
-              ))}
+              <GroupedOptions items={TRANSLATIONS} label={translationLabel} />
             </select>
           </label>
         </section>
@@ -127,16 +126,7 @@ function SettingsPanel({ onClose }) {
               value={settings.tafsir}
               onChange={(event) => set('tafsir')(Number(event.target.value))}
             >
-              <optgroup label="Arabic">
-                {TAFSIRS.filter((item) => item.lang === 'ar').map((item) => (
-                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-                ))}
-              </optgroup>
-              <optgroup label="English">
-                {TAFSIRS.filter((item) => item.lang === 'en').map((item) => (
-                  <option key={item.id} value={item.id}>{`${item.name} · ${item.english}`}</option>
-                ))}
-              </optgroup>
+              <GroupedOptions items={TAFSIRS} label={tafsirLabel} />
             </select>
           </label>
         </section>

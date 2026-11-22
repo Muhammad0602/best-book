@@ -7,15 +7,18 @@ import {
   JUZ_COUNT, PAGE_COUNT, SURAHS, isValidAyah, juzStart, loadAllArabic, normalizeArabic,
   pageStart, reference,
 } from '../lib/quran';
-import { TRANSLATIONS, loadWholeTranslation } from '../lib/sources';
+import { loadWholeTranslation, translationOf } from '../lib/sources';
 
 const PAGE_SIZE = 40;
 const ARABIC = /[؀-ۿ]/;
 const COUNTS = SURAHS.map((surah) => surah.numberOfAyahs);
 
+// Lower case, and "ё" read as "е" as most Russian readers type it. Keeps the length.
+const fold = (text) => text.toLowerCase().replace(/ё/g, 'е');
+
 // The text with every match of the search marked.
 const marked = (text, query) => {
-  const lower = text.toLowerCase();
+  const lower = fold(text);
   const parts = [];
   let at = 0;
   let index = lower.indexOf(query, at);
@@ -141,7 +144,7 @@ function QuranSearch() {
   const [shown, setShown] = useState(PAGE_SIZE);
   const query = (params.get('q') || '').trim();
   const arabic = ARABIC.test(query);
-  const editionName = (TRANSLATIONS.find((item) => item.id === edition) || TRANSLATIONS[0]).name;
+  const editionName = translationOf(edition).name;
 
   // The address follows the search box, so "back" returns to the same results.
   useEffect(() => {
@@ -185,10 +188,10 @@ function QuranSearch() {
         return results;
       })
       : loadWholeTranslation(edition, COUNTS).then((all) => {
-        const needle = query.toLowerCase();
+        const needle = fold(query);
         const results = [];
         all.forEach((surah, s) => surah.forEach((line, a) => {
-          if (line.toLowerCase().includes(needle)) {
+          if (fold(line).includes(needle)) {
             results.push({ surah: s + 1, ayah: a + 1, english: line });
           }
         }));
@@ -206,7 +209,7 @@ function QuranSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, arabic, edition]);
 
-  const needle = query.toLowerCase();
+  const needle = fold(query);
 
   return (
     <div className="search-page">
@@ -221,7 +224,7 @@ function QuranSearch() {
           type="text"
           inputMode="search"
           enterKeyHint="search"
-          placeholder="Search in Arabic or English, or 2:255"
+          placeholder="Search the Arabic or the translation, or 2:255"
           aria-label="Search the Quran"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -286,7 +289,9 @@ function QuranSearch() {
                 <span className="result-arabic" lang="ar" dir="rtl">{result.arabic}</span>
               )}
               {result.english && (
-                <span className="result-english">{marked(result.english, needle)}</span>
+                <span className="result-english" lang={translationOf(edition).lang}>
+                  {marked(result.english, needle)}
+                </span>
               )}
             </Link>
           </li>

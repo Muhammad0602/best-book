@@ -53,7 +53,7 @@ function Words({
 }
 
 function Ayah({
-  ayah, highlights, drag, showTranslation, playing, bookmarked, noted,
+  ayah, highlights, drag, showTranslation, translationLang, playing, bookmarked, noted,
 }) {
   const arabic = useMemo(() => splitWords(ayah.text), [ayah.text]);
   const english = useMemo(() => splitWords(ayah.translation), [ayah.translation]);
@@ -95,7 +95,7 @@ function Ayah({
         {' '}
       </p>
       {showTranslation && english.length > 0 && (
-        <p className="ayah english-ayah" dir="ltr" lang="en">
+        <p className="ayah english-ayah" dir="ltr" lang={translationLang}>
           <Words words={english} text="en" covers={englishCovers} drag={drag} />
         </p>
       )}
@@ -111,6 +111,7 @@ Ayah.propTypes = {
   }).isRequired,
   highlights: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   showTranslation: PropTypes.bool,
+  translationLang: PropTypes.string,
   playing: PropTypes.bool,
   bookmarked: PropTypes.bool,
   noted: PropTypes.bool,
@@ -123,7 +124,12 @@ Ayah.propTypes = {
 };
 
 Ayah.defaultProps = {
-  drag: null, showTranslation: false, playing: false, bookmarked: false, noted: false,
+  drag: null,
+  showTranslation: false,
+  translationLang: 'en',
+  playing: false,
+  bookmarked: false,
+  noted: false,
 };
 
 export default React.memo(Ayah);

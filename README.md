@@ -111,12 +111,12 @@ npm test
 
 - **Madinah-style page** – the Arabic text uses the King Fahd Complex *Uthmanic Hafs* font and its matching text (bundled in `src/data/quran`, built with `node scripts/build-quran-text.js`), and the ayahs follow one another like on a page of the mushaf. The whole Arabic text works offline.
 - **Mushaf pages** – long surahs are split into the pages of the Madinah mushaf. Turn pages with the buttons, the arrow keys or a sideways swipe.
-- **Translations** – off by default; the *Translation* button shows the translation under each ayah. Choose between *The Clear Quran* (Dr. Mustafa Khattab), *Saheeh International* and Muhammad Asad. They are downloaded on demand (jsDelivr `fawazahmed0/quran-api`, quran.com, alquran.cloud); check each publisher's terms before distributing the app widely.
+- **Translations** – off by default; the *Translation* button shows the translation under each ayah. Choose between *The Clear Quran* (Dr. Mustafa Khattab), *Saheeh International* and Muhammad Asad in English, Elmir Kuliev in Russian, and Khoja Mirov (the King Fahd Complex edition) in Tajik. They are downloaded on demand (jsDelivr `fawazahmed0/quran-api`, quran.com, alquran.cloud); check each publisher's terms before distributing the app widely.
 - **Ayah menu** – tap an ayah number to play it, read its tafsir, bookmark it, write a note, copy or share it. Bookmarks and notes are listed on the home page.
 - **Recitation** – listen ayah by ayah with a choice of ten reciters (audio from cdn.islamic.network); the page turns and the current ayah is lit as it plays.
 - **Search and go to** – search the Arabic text or the chosen translation, or jump to a surah and ayah, a page (1–604) or a juz.
 - **Settings** – the *Aa* button: night mode, text size, translation, tafsir, reciter and page-turn direction. Signed-in readers find their settings and last place on every device.
-- **Tafsir** – from the ayah menu: Arabic (Ibn Kathir, al-Tabari, al-Qurtubi, al-Baghawi, al-Sa'di, al-Wasit, al-Muyassar) and English (Al-Mukhtasar, Ibn Kathir abridged, Ma'arif al-Qur'an, Al-Jalalayn, Asbab al-Nuzul of al-Wahidi). Sources: the quran.com API and the spa5k/tafsir_api collection on GitHub.
+- **Tafsir** – from the ayah menu: Arabic (Ibn Kathir, al-Tabari, al-Qurtubi, al-Baghawi, al-Sa'di, al-Wasit, al-Muyassar) and English (Al-Mukhtasar, Ibn Kathir abridged, Ma'arif al-Qur'an, Al-Jalalayn, Asbab al-Nuzul of al-Wahidi) and Russian (al-Sa'di, translated by Elmir Kuliev). Sources: the quran.com API and the spa5k/tafsir_api collection on GitHub.
 
 - **Highlights** – choose *Highlight*, then tap a word or drag across words (Arabic or translation). Tap a highlight later to change its colour or remove it; overlapping highlights are removed one at a time.
 - **Drawings** – choose *Draw* to mark the text freehand (X, circle, underline, arrow). Pen, eraser, select-and-delete, undo/redo, colours and thickness. Two fingers scroll while drawing.

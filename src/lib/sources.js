@@ -11,11 +11,35 @@ const ALQURAN_CLOUD = 'https://api.alquran.cloud/v1';
 const JSDELIVR = 'https://cdn.jsdelivr.net/gh';
 const GITHUB_TAFSIRS = 'https://raw.githubusercontent.com/spa5k/tafsir_api/main';
 
-export const TRANSLATIONS = [
-  { id: 'en.khattab', name: 'The Clear Quran', author: 'Dr. Mustafa Khattab' },
-  { id: 'en.sahih', name: 'Saheeh International', author: 'Saheeh International' },
-  { id: 'en.asad', name: 'The Message of the Quran', author: 'Muhammad Asad' },
+// The languages that translations and tafsirs are grouped by, in this order.
+export const LANGUAGES = [
+  { id: 'ar', label: 'Arabic' },
+  { id: 'en', label: 'English' },
+  { id: 'ru', label: 'Русский' },
+  { id: 'tg', label: 'Тоҷикӣ' },
 ];
+
+// `qdc`: the number of the translation in the quran.com API.
+export const TRANSLATIONS = [
+  {
+    id: 'en.khattab', name: 'The Clear Quran', author: 'Dr. Mustafa Khattab', lang: 'en',
+  },
+  {
+    id: 'en.sahih', name: 'Saheeh International', author: 'Saheeh International', lang: 'en', qdc: 20,
+  },
+  {
+    id: 'en.asad', name: 'The Message of the Quran', author: 'Muhammad Asad', lang: 'en',
+  },
+  {
+    id: 'ru.kuliev', name: 'Смыслы Корана', author: 'Эльмир Кулиев', lang: 'ru', qdc: 45,
+  },
+  {
+    id: 'tg.khojamirov', name: 'Тарҷумаи маъноҳо', author: 'Хоҷа Миров', lang: 'tg', qdc: 139,
+  },
+];
+
+export const translationOf = (edition) => TRANSLATIONS.find((item) => item.id === edition)
+  || TRANSLATIONS[0];
 
 export const DEFAULT_TRANSLATION = 'en.khattab';
 // Marks made on the translation before there was a choice.
@@ -35,8 +59,9 @@ export const loadTranslation = async (edition, surah) => {
     );
     return data.chapter.map((verse) => plain(verse.text));
   }
-  if (edition === 'en.sahih') {
-    const { data } = await axios.get(`${QURAN_COM}/quran/translations/20?chapter_number=${surah}`);
+  const { qdc } = translationOf(edition);
+  if (qdc) {
+    const { data } = await axios.get(`${QURAN_COM}/quran/translations/${qdc}?chapter_number=${surah}`);
     return data.translations.map((verse) => plain(verse.text));
   }
   const { data } = await axios.get(`${ALQURAN_CLOUD}/surah/${surah}/en.asad`);
@@ -61,8 +86,8 @@ export const loadWholeTranslation = (edition, counts) => {
   if (edition === 'en.khattab') {
     request = axios.get(`${JSDELIVR}/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba.json`)
       .then(({ data }) => split(data.quran.map((verse) => plain(verse.text))));
-  } else if (edition === 'en.sahih') {
-    request = axios.get(`${QURAN_COM}/quran/translations/20`)
+  } else if (translationOf(edition).qdc) {
+    request = axios.get(`${QURAN_COM}/quran/translations/${translationOf(edition).qdc}`)
       .then(({ data }) => split(data.translations.map((verse) => plain(verse.text))));
   } else {
     request = axios.get(`${ALQURAN_CLOUD}/quran/en.asad`)
@@ -117,6 +142,9 @@ export const TAFSIRS = [
   },
   {
     id: 9003, slug: 'en-asbab-al-nuzul-by-al-wahidi', name: 'Asbab al-Nuzul', english: 'al-Wahidi, occasions of revelation', lang: 'en', qdc: false,
+  },
+  {
+    id: 170, slug: 'ru-tafseer-al-saddi', name: 'Тафсир ас-Саади', english: 'пер. Эльмир Кулиев', lang: 'ru', qdc: true,
   },
 ];
 

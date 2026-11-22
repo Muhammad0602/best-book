@@ -10,7 +10,8 @@ import {
 import { changeApplied, historyCleared, migrated } from '../redux/annotations/annotationsSlice';
 import { SCALES, setSetting } from '../redux/settings/settingsSlice';
 import { isLegacy, migrate } from '../lib/legacy';
-import { FIRST_TRANSLATION, TRANSLATIONS } from '../lib/sources';
+import { FIRST_TRANSLATION, TRANSLATIONS, translationOf } from '../lib/sources';
+import GroupedOptions, { translationLabel } from './GroupedOptions';
 import { arabicNumber, juzOf, reference } from '../lib/quran';
 import fatiha from '../data/quran/1.json';
 import pageMap from '../data/pages.json';
@@ -720,9 +721,7 @@ function Details() {
           <label htmlFor="translation-choice">
             <span>Translation</span>
             <select id="translation-choice" value={edition} onChange={chooseEdition}>
-              {TRANSLATIONS.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.name} · ${item.author}`}</option>
-              ))}
+              <GroupedOptions items={TRANSLATIONS} label={translationLabel} />
             </select>
           </label>
         </div>
@@ -774,6 +773,7 @@ function Details() {
               highlights={highlightsByAyah[ayah.numberInSurah] || NONE}
               drag={drag && drag.ayah === ayah.numberInSurah ? drag : null}
               showTranslation={showTranslation}
+              translationLang={translationOf(edition).lang}
               playing={playingAyah === ayah.numberInSurah}
               bookmarked={Boolean(saved[ayah.numberInSurah] && saved[ayah.numberInSurah].bookmark)}
               noted={Boolean(saved[ayah.numberInSurah] && saved[ayah.numberInSurah].note)}
