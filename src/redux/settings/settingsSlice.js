@@ -7,7 +7,7 @@ import { createSlice } from '@reduxjs/toolkit';
 */
 
 export const SETTINGS_KEY = 'bestbook.settings';
-export const SCALES = [0.85, 1, 1.15, 1.3, 1.5];
+export const SCALES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
 
 export const RECITERS = [
   { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy' },

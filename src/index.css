@@ -989,3 +989,23 @@ a {
     font-size: calc(19px * var(--scale, 1));
   }
 }
+
+/*
+  Laptops and larger: the page grows with the screen, so more words fit on a
+  line and the gaps of a justified line stay small, without lines so long
+  that the eye loses its place.
+*/
+@media screen and (min-width: 1200px) {
+  .details {
+    width: 80vw;
+    max-width: 1180px;
+  }
+
+  .ayahs {
+    padding: 40px 64px;
+  }
+
+  .english-ayah {
+    font-size: calc(20px * var(--scale, 1));
+  }
+}
