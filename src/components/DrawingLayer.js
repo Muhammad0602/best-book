@@ -113,6 +113,27 @@ function DrawingLayer({
     };
   }, [articleRef]);
 
+  /*
+    While drawing, the page must stay still under the finger. `touch-action:
+    none` asks for that, but some phones (Safari on iPhone in particular)
+    still scroll, so the browser's own touch scrolling is also cancelled here.
+    Two fingers still scroll the page: that is done by hand in onPointerMove.
+  */
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!active || !svg) return undefined;
+    const hold = (event) => {
+      if (event.cancelable) event.preventDefault();
+    };
+    svg.addEventListener('touchmove', hold, { passive: false });
+    // Safari's pinch-zoom gestures.
+    svg.addEventListener('gesturestart', hold, { passive: false });
+    return () => {
+      svg.removeEventListener('touchmove', hold);
+      svg.removeEventListener('gesturestart', hold);
+    };
+  }, [active]);
+
   const shown = useMemo(() => {
     if (!overrides) return drawings;
     return drawings

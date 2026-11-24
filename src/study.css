@@ -68,8 +68,10 @@
   cursor: pointer;
 }
 
+/* No text selection, magnifier or long-press menu while drawing. */
 .mode-draw {
   user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ---------- drawings ---------- */
@@ -87,6 +89,7 @@
 .draw-layer.active {
   pointer-events: auto;
   touch-action: none;
+  overscroll-behavior: contain;
   cursor: crosshair;
 }
 
