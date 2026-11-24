@@ -20,7 +20,11 @@ export const RECITERS = [
   { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali Al-Ajamy' },
   { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub' },
   { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel' },
+  // Only whole-surah recordings exist (mp3quran.net): no ayah-by-ayah playback.
+  { id: 'raad.kurdi', name: 'Raad Muhammad al-Kurdi', surahAudio: 'https://cdn.mp3quran.net/audio/raad-kurdi/r1/' },
 ];
+
+export const reciterOf = (id) => RECITERS.find((reciter) => reciter.id === id) || RECITERS[0];
 
 export const defaultSettings = {
   theme: 'auto', // 'auto' | 'light' | 'dark'

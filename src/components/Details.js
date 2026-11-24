@@ -8,7 +8,7 @@ import {
   getSurah, getTranslation, translationKey, ARABIC_EDITION,
 } from '../redux/chapters/chaptersSlice';
 import { changeApplied, historyCleared, migrated } from '../redux/annotations/annotationsSlice';
-import { SCALES, setSetting } from '../redux/settings/settingsSlice';
+import { SCALES, reciterOf, setSetting } from '../redux/settings/settingsSlice';
 import { isLegacy, migrate } from '../lib/legacy';
 import { FIRST_TRANSLATION, TRANSLATIONS, translationOf } from '../lib/sources';
 import GroupedOptions, { translationLabel } from './GroupedOptions';
@@ -500,8 +500,16 @@ function Details() {
 
   // ---------- recitation ----------
 
+  // A reciter with only whole-surah recordings: the surah plays from the start,
+  // and no ayah is followed.
+  const wholeSurah = Boolean(reciterOf(reciter).surahAudio);
+
   const playFrom = (ayah) => {
     setMenuAyah(null);
+    if (wholeSurah) {
+      setAudio({ ayah: 1, playing: true });
+      return;
+    }
     setAudio({ ayah, playing: true });
     const index = pageOf(ayah);
     if (index !== pageIndex) showPage(index, index > pageIndex ? 1 : -1, true);
@@ -515,7 +523,7 @@ function Details() {
 
   const onAudioEnded = () => {
     if (!audio) return;
-    if (audio.ayah >= total) {
+    if (wholeSurah || audio.ayah >= total) {
       setAudio({ ayah: audio.ayah, playing: false });
       return;
     }
@@ -523,7 +531,7 @@ function Details() {
   };
 
   // Keep the ayah being recited in view.
-  const playingAyah = audio ? audio.ayah : 0;
+  const playingAyah = audio && !wholeSurah ? audio.ayah : 0;
   useEffect(() => {
     if (!playingAyah) return undefined;
     const timer = setTimeout(() => {

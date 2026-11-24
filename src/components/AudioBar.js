@@ -3,15 +3,20 @@ import PropTypes from 'prop-types';
 import {
   BiPause, BiPlay, BiSkipNext, BiSkipPrevious, BiX,
 } from 'react-icons/bi';
-import { RECITERS } from '../redux/settings/settingsSlice';
+import { reciterOf } from '../redux/settings/settingsSlice';
 import { globalAyah } from '../lib/quran';
 
 const AUDIO = 'https://cdn.islamic.network/quran/audio/128';
 
-export const audioUrl = (reciter, surah, ayah) => `${AUDIO}/${reciter}/${globalAyah(surah, ayah)}.mp3`;
+export const audioUrl = (reciter, surah, ayah) => {
+  const { surahAudio } = reciterOf(reciter);
+  if (surahAudio) return `${surahAudio}${String(surah).padStart(3, '0')}.mp3`;
+  return `${AUDIO}/${reciter}/${globalAyah(surah, ayah)}.mp3`;
+};
 
 // Recitation, one ayah after another. The reader component decides which ayah
-// plays; this bar plays it and reports when it has ended.
+// plays; this bar plays it and reports when it has ended. A reciter with only
+// whole-surah recordings plays the surah as one file.
 function AudioBar({
   surah, surahName, ayah, total, playing, reciter, onToggle, onStep, onEnded, onStop,
 }) {
@@ -19,7 +24,9 @@ function AudioBar({
   const nextRef = useRef(null);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
-  const reciterName = (RECITERS.find((item) => item.id === reciter) || RECITERS[0]).name;
+  const { name: reciterName, surahAudio } = reciterOf(reciter);
+  const whole = Boolean(surahAudio);
+  const title = whole ? `${surahName} · Whole surah` : `${surahName} · Ayah ${ayah}`;
   const callbacks = useRef({});
   callbacks.current = {
     onToggle, onStep, onEnded, onStop,
@@ -43,11 +50,13 @@ function AudioBar({
 
   useEffect(() => {
     const audio = audioRef.current;
-    audio.src = audioUrl(reciter, surah, ayah);
+    const src = audioUrl(reciter, surah, ayah);
+    if (audio.src === src) return; // the same whole-surah file
+    audio.src = src;
     setFailed(false);
     if (playing) audio.play().catch(() => {});
     // Load the next ayah in the background, so there is no gap.
-    if (ayah < total) {
+    if (!whole && ayah < total) {
       const next = new Audio();
       next.preload = 'auto';
       next.src = audioUrl(reciter, surah, ayah + 1);
@@ -70,14 +79,14 @@ function AudioBar({
     }
     const session = navigator.mediaSession;
     session.metadata = new MediaMetadata({
-      title: `${surahName} · Ayah ${ayah}`,
+      title,
       artist: reciterName,
       album: 'Quran Karim',
     });
     session.setActionHandler('play', () => callbacks.current.onToggle(true));
     session.setActionHandler('pause', () => callbacks.current.onToggle(false));
-    session.setActionHandler('nexttrack', () => callbacks.current.onStep(1));
-    session.setActionHandler('previoustrack', () => callbacks.current.onStep(-1));
+    session.setActionHandler('nexttrack', whole ? null : () => callbacks.current.onStep(1));
+    session.setActionHandler('previoustrack', whole ? null : () => callbacks.current.onStep(-1));
     return () => {
       ['play', 'pause', 'nexttrack', 'previoustrack'].forEach((action) => {
         try {
@@ -87,7 +96,7 @@ function AudioBar({
         }
       });
     };
-  }, [surahName, ayah, reciterName]);
+  }, [title, reciterName, whole]);
 
   let status = reciterName;
   if (failed) status = 'Could not play. Check your connection.';
@@ -96,10 +105,10 @@ function AudioBar({
   return (
     <div className="audio-bar" role="region" aria-label="Recitation">
       <div className="audio-info">
-        <strong>{`${surahName} · Ayah ${ayah}`}</strong>
+        <strong>{title}</strong>
         <span className={failed ? 'audio-error' : ''}>{status}</span>
       </div>
-      <button type="button" className="tool" aria-label="Previous ayah" disabled={ayah <= 1} onClick={() => onStep(-1)}>
+      <button type="button" className="tool" aria-label="Previous ayah" disabled={whole || ayah <= 1} onClick={() => onStep(-1)}>
         <BiSkipPrevious aria-hidden="true" />
       </button>
       <button
@@ -110,7 +119,7 @@ function AudioBar({
       >
         {playing ? <BiPause aria-hidden="true" /> : <BiPlay aria-hidden="true" />}
       </button>
-      <button type="button" className="tool" aria-label="Next ayah" disabled={ayah >= total} onClick={() => onStep(1)}>
+      <button type="button" className="tool" aria-label="Next ayah" disabled={whole || ayah >= total} onClick={() => onStep(1)}>
         <BiSkipNext aria-hidden="true" />
       </button>
       <button type="button" className="tool" aria-label="Stop the recitation" onClick={onStop}>
