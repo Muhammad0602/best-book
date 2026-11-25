@@ -9,17 +9,18 @@ import { createSlice } from '@reduxjs/toolkit';
 export const SETTINGS_KEY = 'bestbook.settings';
 export const SCALES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
 
+// `folder`: the reciter's folder on everyayah.com, one file per ayah.
 export const RECITERS = [
-  { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy' },
-  { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary' },
-  { id: 'ar.husarymujawwad', name: 'Al-Husary (Mujawwad)' },
-  { id: 'ar.minshawi', name: 'Mohamed Siddiq Al-Minshawi' },
-  { id: 'ar.mahermuaiqly', name: 'Maher Al-Muaiqly' },
-  { id: 'ar.hudhaify', name: 'Ali Al-Hudhaify' },
-  { id: 'ar.shaatree', name: 'Abu Bakr Ash-Shaatree' },
-  { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali Al-Ajamy' },
-  { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub' },
-  { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel' },
+  { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy', folder: 'Alafasy_128kbps' },
+  { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary', folder: 'Husary_128kbps' },
+  { id: 'ar.husarymujawwad', name: 'Al-Husary (Mujawwad)', folder: 'Husary_128kbps_Mujawwad' },
+  { id: 'ar.minshawi', name: 'Mohamed Siddiq Al-Minshawi', folder: 'Minshawy_Murattal_128kbps' },
+  { id: 'ar.mahermuaiqly', name: 'Maher Al-Muaiqly', folder: 'MaherAlMuaiqly128kbps' },
+  { id: 'ar.hudhaify', name: 'Ali Al-Hudhaify', folder: 'Hudhaify_128kbps' },
+  { id: 'ar.shaatree', name: 'Abu Bakr Ash-Shaatree', folder: 'Abu_Bakr_Ash-Shaatree_128kbps' },
+  { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali Al-Ajamy', folder: 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net' },
+  { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub', folder: 'Muhammad_Ayyoub_128kbps' },
+  { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel', folder: 'Muhammad_Jibreel_128kbps' },
   // Only whole-surah recordings exist (mp3quran.net): no ayah-by-ayah playback.
   { id: 'raad.kurdi', name: 'Raad Muhammad al-Kurdi', surahAudio: 'https://cdn.mp3quran.net/audio/raad-kurdi/r1/' },
 ];

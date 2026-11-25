@@ -50,7 +50,7 @@ Choice.propTypes = {
   label: PropTypes.string.isRequired,
 };
 
-function SettingsPanel({ onClose }) {
+function SettingsPanel({ onClose, onOpenDownloads }) {
   const dispatch = useDispatch();
   const settings = useSelector((store) => store.settings);
   const user = useSelector((store) => store.auth.user);
@@ -150,6 +150,16 @@ function SettingsPanel({ onClose }) {
         </section>
 
         <section>
+          <h4>Offline</h4>
+          <button type="button" className="plain-button secondary wide-button" onClick={onOpenDownloads}>
+            Downloads
+          </button>
+          <p className="setting-hint">
+            Download recitations, translations and tafsirs to use them without internet.
+          </p>
+        </section>
+
+        <section>
           <h4>Turning pages</h4>
           <Choice options={TURNS} value={settings.pageTurn} onChange={set('pageTurn')} label="Turning pages" />
           <p className="setting-hint">{`${turn.hint}, or use the buttons under the page.`}</p>
@@ -167,6 +177,7 @@ function SettingsPanel({ onClose }) {
 
 SettingsPanel.propTypes = {
   onClose: PropTypes.func.isRequired,
+  onOpenDownloads: PropTypes.func.isRequired,
 };
 
 export default SettingsPanel;

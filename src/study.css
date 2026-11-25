@@ -522,6 +522,88 @@
   opacity: 1;
 }
 
+.audio-saved {
+  color: rgb(24, 182, 103);
+}
+
+.audio-percent {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- downloads ---------- */
+
+.setting-hint.first {
+  margin: 4px 0 6px;
+}
+
+.wide-button {
+  width: 100%;
+}
+
+.plain-button.small {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+.download-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.download-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.download-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.download-name > span,
+.download-name small {
+  display: block;
+}
+
+.download-name small {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.download-name .download-error {
+  color: rgb(198, 40, 40);
+}
+
+.download-done {
+  margin-right: 4px;
+  vertical-align: -2px;
+  color: rgb(24, 182, 103);
+}
+
+.download-bar {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: var(--line);
+}
+
+.download-bar span {
+  display: block;
+  height: 100%;
+  background-color: rgb(24, 182, 103);
+  transition: width 0.3s;
+}
+
 .toolbar .play-button {
   background-color: rgb(24, 182, 103);
   color: black;

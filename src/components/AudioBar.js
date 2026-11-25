@@ -1,32 +1,42 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  BiPause, BiPlay, BiSkipNext, BiSkipPrevious, BiX,
+  BiCheck, BiDownload, BiPause, BiPlay, BiSkipNext, BiSkipPrevious, BiX,
 } from 'react-icons/bi';
 import { reciterOf } from '../redux/settings/settingsSlice';
-import { globalAyah } from '../lib/quran';
+import {
+  audioUrl, cacheAvailable, isAudioDownloaded, playableUrl, prefetchAudio, useDownloads,
+} from '../lib/offline';
+import { audioJobKey, cancelDownload, downloadAudio } from '../lib/downloads';
 
-const AUDIO = 'https://cdn.islamic.network/quran/audio/128';
+export { audioUrl };
 
-export const audioUrl = (reciter, surah, ayah) => {
-  const { surahAudio } = reciterOf(reciter);
-  if (surahAudio) return `${surahAudio}${String(surah).padStart(3, '0')}.mp3`;
-  return `${AUDIO}/${reciter}/${globalAyah(surah, ayah)}.mp3`;
-};
+// How many ayahs are loaded ahead of the one playing.
+const AHEAD = 3;
+const RETRIES = 4;
 
 // Recitation, one ayah after another. The reader component decides which ayah
 // plays; this bar plays it and reports when it has ended. A reciter with only
-// whole-surah recordings plays the surah as one file.
+// whole-surah recordings plays the surah as one file. Downloaded surahs play
+// from the device; otherwise the next ayahs are loaded ahead, and a dropped
+// connection is retried, so a weak signal does not stop the recitation.
 function AudioBar({
   surah, surahName, ayah, total, playing, reciter, onToggle, onStep, onEnded, onStop,
 }) {
   const audioRef = useRef(null);
-  const nextRef = useRef(null);
+  const srcRef = useRef('');
+  const retriesRef = useRef(0);
+  const resumeRef = useRef(0);
+  const playingRef = useRef(playing);
+  playingRef.current = playing;
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const { name: reciterName, surahAudio } = reciterOf(reciter);
   const whole = Boolean(surahAudio);
   const title = whole ? `${surahName} · Whole surah` : `${surahName} · Ayah ${ayah}`;
+  const { record, jobs } = useDownloads();
+  const downloaded = isAudioDownloaded(record, reciter, surah);
+  const job = jobs[audioJobKey(reciter, surah)];
   const callbacks = useRef({});
   callbacks.current = {
     onToggle, onStep, onEnded, onStop,
@@ -37,39 +47,82 @@ function AudioBar({
     const audio = new Audio();
     audio.preload = 'auto';
     audioRef.current = audio;
+    const retry = () => {
+      if (!srcRef.current || retriesRef.current >= RETRIES) return false;
+      retriesRef.current += 1;
+      resumeRef.current = audio.currentTime || resumeRef.current;
+      setTimeout(() => {
+        audio.src = srcRef.current;
+        if (playingRef.current) audio.play().catch(() => {});
+      }, 1500 * retriesRef.current);
+      return true;
+    };
     audio.addEventListener('ended', () => callbacks.current.onEnded());
     audio.addEventListener('waiting', () => setWaiting(true));
-    audio.addEventListener('playing', () => { setWaiting(false); setFailed(false); });
-    audio.addEventListener('error', () => { setWaiting(false); setFailed(true); });
+    audio.addEventListener('playing', () => {
+      setWaiting(false);
+      setFailed(false);
+      retriesRef.current = 0;
+    });
+    // After a retry, carry on from where the sound stopped.
+    audio.addEventListener('loadedmetadata', () => {
+      if (resumeRef.current > 0) {
+        audio.currentTime = resumeRef.current;
+        resumeRef.current = 0;
+      }
+    });
+    audio.addEventListener('error', () => {
+      if (retry()) return;
+      setWaiting(false);
+      setFailed(true);
+    });
+    // Back online: try again straight away.
+    const onOnline = () => {
+      retriesRef.current = 0;
+      if (audio.error) retry();
+    };
+    window.addEventListener('online', onOnline);
     return () => {
+      window.removeEventListener('online', onOnline);
       audio.pause();
+      if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
       audio.removeAttribute('src');
       audio.load();
     };
   }, []);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    const src = audioUrl(reciter, surah, ayah);
-    if (audio.src === src) return; // the same whole-surah file
-    audio.src = src;
+    let current = true;
+    const url = audioUrl(reciter, surah, ayah);
     setFailed(false);
-    if (playing) audio.play().catch(() => {});
-    // Load the next ayah in the background, so there is no gap.
-    if (!whole && ayah < total) {
-      const next = new Audio();
-      next.preload = 'auto';
-      next.src = audioUrl(reciter, surah, ayah + 1);
-      nextRef.current = next;
+    retriesRef.current = 0;
+    resumeRef.current = 0;
+    playableUrl(url).then((src) => {
+      const audio = audioRef.current;
+      if (!current || !audio) {
+        if (src.startsWith('blob:')) URL.revokeObjectURL(src);
+        return;
+      }
+      if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
+      // A retry goes back to the network address.
+      srcRef.current = url;
+      audio.src = src;
+      if (playingRef.current) audio.play().catch(() => {});
+    });
+    if (!whole) {
+      for (let next = ayah + 1; next <= Math.min(total, ayah + AHEAD); next += 1) {
+        prefetchAudio(audioUrl(reciter, surah, next));
+      }
     }
-    // `playing` is handled by the effect below.
+    return () => { current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [surah, ayah, reciter, total]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (playing) audio.play().catch(() => {});
-    else audio.pause();
+    if (playing) {
+      if (audio.src) audio.play().catch(() => {});
+    } else audio.pause();
   }, [playing]);
 
   // Lock screen and headphone controls.
@@ -101,13 +154,49 @@ function AudioBar({
   let status = reciterName;
   if (failed) status = 'Could not play. Check your connection.';
   else if (waiting && playing) status = 'Loading…';
+  if (job && !job.error) status = `Downloading this surah… ${Math.floor((job.done / job.total) * 100)}%`;
+  else if (job && job.error) status = job.error;
+
+  let download = null;
+  if (cacheAvailable) {
+    if (downloaded) {
+      download = (
+        <span className="tool audio-saved" title="This surah is downloaded" aria-label="This surah is downloaded">
+          <BiCheck aria-hidden="true" />
+        </span>
+      );
+    } else if (job && !job.error) {
+      download = (
+        <button
+          type="button"
+          className="tool"
+          aria-label="Stop downloading"
+          onClick={() => cancelDownload(audioJobKey(reciter, surah))}
+        >
+          <span className="audio-percent">{`${Math.floor((job.done / job.total) * 100)}%`}</span>
+        </button>
+      );
+    } else {
+      download = (
+        <button
+          type="button"
+          className="tool"
+          aria-label="Download this surah for offline listening"
+          onClick={() => downloadAudio(reciter, surah)}
+        >
+          <BiDownload aria-hidden="true" />
+        </button>
+      );
+    }
+  }
 
   return (
     <div className="audio-bar" role="region" aria-label="Recitation">
       <div className="audio-info">
         <strong>{title}</strong>
-        <span className={failed ? 'audio-error' : ''}>{status}</span>
+        <span className={failed || (job && job.error) ? 'audio-error' : ''}>{status}</span>
       </div>
+      {download}
       <button type="button" className="tool" aria-label="Previous ayah" disabled={whole || ayah <= 1} onClick={() => onStep(-1)}>
         <BiSkipPrevious aria-hidden="true" />
       </button>

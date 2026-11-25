@@ -16,13 +16,14 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Quran text: answer from the saved copy straight away and refresh it in the
 // background, so surahs that were opened before can be read offline.
+// Downloads (marked `bb-download`) are kept by the app in its own cache.
 registerRoute(
   ({ url }) => [
     'https://api.alquran.cloud',
     'https://api.quran.com',
     'https://cdn.jsdelivr.net',
     'https://raw.githubusercontent.com',
-  ].includes(url.origin),
+  ].includes(url.origin) && !url.searchParams.has('bb-download'),
   new StaleWhileRevalidate({
     cacheName: 'quran-text',
     plugins: [

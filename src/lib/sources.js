@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { SURAHS } from './quran';
+import { offlineTafsir, offlineTranslation } from './offline';
 
 /*
   Where the texts that do not ship with the app come from. Everything here is
@@ -53,6 +55,8 @@ const plain = (text) => (text || '')
 
 // Resolves to the text of every ayah of the surah, in order.
 export const loadTranslation = async (edition, surah) => {
+  const downloaded = await offlineTranslation(edition);
+  if (downloaded && downloaded[surah - 1]) return downloaded[surah - 1];
   if (edition === 'en.khattab') {
     const { data } = await axios.get(
       `${JSDELIVR}/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba/${surah}.json`,
@@ -70,29 +74,37 @@ export const loadTranslation = async (edition, surah) => {
 
 const wholeCache = new Map();
 
-// The whole of one translation, for searching: one list of ayahs per surah.
-export const loadWholeTranslation = (edition, counts) => {
-  if (wholeCache.has(edition)) return wholeCache.get(edition);
+const COUNTS = SURAHS.map((surah) => surah.numberOfAyahs);
+
+// The whole of one translation from the network: one list of ayahs per surah.
+export const fetchWholeTranslation = (edition) => {
   const split = (flat) => {
     const out = [];
     let at = 0;
-    counts.forEach((count) => {
+    COUNTS.forEach((count) => {
       out.push(flat.slice(at, at + count));
       at += count;
     });
     return out;
   };
-  let request;
   if (edition === 'en.khattab') {
-    request = axios.get(`${JSDELIVR}/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba.json`)
+    return axios.get(`${JSDELIVR}/fawazahmed0/quran-api@1/editions/eng-mustafakhattaba.json`)
       .then(({ data }) => split(data.quran.map((verse) => plain(verse.text))));
-  } else if (translationOf(edition).qdc) {
-    request = axios.get(`${QURAN_COM}/quran/translations/${translationOf(edition).qdc}`)
-      .then(({ data }) => split(data.translations.map((verse) => plain(verse.text))));
-  } else {
-    request = axios.get(`${ALQURAN_CLOUD}/quran/en.asad`)
-      .then(({ data }) => data.data.surahs.map((surah) => surah.ayahs.map((a) => plain(a.text))));
   }
+  if (translationOf(edition).qdc) {
+    return axios.get(`${QURAN_COM}/quran/translations/${translationOf(edition).qdc}`)
+      .then(({ data }) => split(data.translations.map((verse) => plain(verse.text))));
+  }
+  return axios.get(`${ALQURAN_CLOUD}/quran/en.asad`)
+    .then(({ data }) => data.data.surahs.map((surah) => surah.ayahs.map((a) => plain(a.text))));
+};
+
+// The whole of one translation, for searching: the downloaded copy if there
+// is one, else from the network.
+export const loadWholeTranslation = (edition) => {
+  if (wholeCache.has(edition)) return wholeCache.get(edition);
+  const request = offlineTranslation(edition)
+    .then((downloaded) => downloaded || fetchWholeTranslation(edition));
   const promise = request.catch((error) => {
     wholeCache.delete(edition);
     throw error;
@@ -150,6 +162,37 @@ export const TAFSIRS = [
 
 export const DEFAULT_TAFSIR = 14;
 
+// One surah of a tafsir, for downloading: { [ayah]: text }, from the same
+// place it is read online (quran.com, else the spa5k collection). Ayahs
+// explained together with the ones before them have no entry.
+// `bb-download` tells the service worker not to keep a second copy.
+export const fetchTafsirSurah = async (tafsirId, surah) => {
+  const tafsir = TAFSIRS.find((item) => item.id === tafsirId) || TAFSIRS[0];
+  const out = {};
+  if (tafsir.qdc) {
+    const { data } = await axios.get(
+      `${QURAN_COM}/tafsirs/${tafsir.id}/by_chapter/${surah}?per_page=500&bb-download=1`,
+    );
+    data.tafsirs.forEach((item) => {
+      const ayah = Number(String(item.verse_key).split(':')[1]);
+      if (ayah && item.text) out[ayah] = item.text;
+    });
+    return out;
+  }
+  const path = `tafsir/${tafsir.slug}/${surah}.json?bb-download=1`;
+  let data;
+  try {
+    ({ data } = await axios.get(`${GITHUB_TAFSIRS}/${path}`));
+  } catch (error) {
+    ({ data } = await axios.get(`${JSDELIVR}/spa5k/tafsir_api@main/${path}`));
+  }
+  const list = Array.isArray(data) ? data : (data && data.ayahs) || [];
+  list.forEach((item) => {
+    if (item && item.ayah && item.text) out[item.ayah] = item.text;
+  });
+  return out;
+};
+
 // The tafsir arrives as HTML; only its text is used, paragraph by paragraph.
 export const paragraphsOf = (html) => {
   const text = (html || '').trim();
@@ -175,6 +218,22 @@ export const loadTafsir = async (tafsirId, surah, ayah) => {
   const key = `${tafsirId}:${surah}:${ayah}`;
   if (tafsirCache.has(key)) return tafsirCache.get(key);
   const tafsir = TAFSIRS.find((item) => item.id === tafsirId) || TAFSIRS[0];
+  // A downloaded tafsir is read from the device. When it has nothing on this
+  // ayah (explained together with the ones before), the network is asked too.
+  const downloaded = await offlineTafsir(tafsir.id, surah);
+  if (downloaded) {
+    // quran.com gives every ayah of a group the group's commentary, which is
+    // stored once, under its first ayah.
+    let from = ayah;
+    if (tafsir.qdc) while (from > 1 && !downloaded[from]) from -= 1;
+    const text = downloaded[from];
+    if (text) {
+      const found = paragraphsOf(text);
+      tafsirCache.set(key, found);
+      return found;
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return [];
+  }
   const fromCollection = async (base) => {
     try {
       const { data } = await axios.get(`${base}/tafsir/${tafsir.slug}/${surah}/${ayah}.json`);

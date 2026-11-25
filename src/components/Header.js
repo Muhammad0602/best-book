@@ -6,13 +6,16 @@ import {
 } from 'react-icons/bi';
 import logo from '../images/quran.png';
 import SettingsPanel from './SettingsPanel';
+import DownloadsPanel from './DownloadsPanel';
 
 function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const user = useSelector((store) => store.auth.user);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  // The open panel: 'settings', 'downloads' or none.
+  const [panel, setPanel] = useState(null);
+  const closePanel = useCallback(() => setPanel(null), []);
+  const openDownloads = useCallback(() => setPanel('downloads'), []);
   const home = pathname === '/';
 
   return (
@@ -44,7 +47,7 @@ function Header() {
             type="button"
             className="bar-button bar-text"
             aria-label="Settings"
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => setPanel('settings')}
           >
             Aa
           </button>
@@ -57,7 +60,8 @@ function Header() {
           </Link>
         </div>
       </header>
-      {settingsOpen && <SettingsPanel onClose={closeSettings} />}
+      {panel === 'settings' && <SettingsPanel onClose={closePanel} onOpenDownloads={openDownloads} />}
+      {panel === 'downloads' && <DownloadsPanel onClose={closePanel} />}
     </>
   );
 }
